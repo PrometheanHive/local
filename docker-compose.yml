@@ -1,0 +1,53 @@
+services:
+  db:
+    container_name: sqlite_locale
+    image: nouchka/sqlite3:latest
+    volumes: 
+      - ./data/db:/root/db
+    environment:
+      - SQLITE3_DB=db.sqlite3
+
+  sqlite-web:
+    container_name: sqlite_webview_locale
+    image: coleifer/sqlite-web
+    volumes:
+      - ./backend:/data
+    ports:
+    - 8080:8080
+    environment:
+      - SQLITE_WEB_PASSWORD=local
+    command: sqlite_web -H 0.0.0.0 -x db.sqlite3 --password
+    depends_on:
+      - db
+
+  backend:
+    container_name: backend_locale
+    build:
+      context: backend/.
+      dockerfile: Dockerfile
+    command: python3.11 manage.py runserver 0.0.0.0:5000
+    volumes: 
+      - "./backend/:/tmp/backend-root"
+      - ./backend:/backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  frontend:
+    container_name: frontend_locale
+    build:
+      context: frontend/.
+      dockerfile: Dockerfile
+    ports:
+      - 2999:2999
+    volumes:
+      - ./frontend/src:/frontend/src
+      - ./frontend/test-utils:/frontend/test-utils
+    environment:
+      - BACKEND_API_PORT=${BACKEND_API_PORT}
+      - CHOKIDAR_USEPOLLING=true
+
+
+  
+  
