@@ -7,7 +7,7 @@ import { ColorSchemeToggle } from '../components/ColorSchemeToggle/ColorSchemeTo
 import Api, { API_BASE } from '@/api/API';
 import S3 from 'react-s3';
 import AWS from 'aws-sdk';
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+//import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 
 //const s3Client = new S3Client({

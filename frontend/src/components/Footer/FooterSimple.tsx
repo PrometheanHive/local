@@ -4,10 +4,10 @@ import classes from './FooterSimple.module.css';
 
 
 const links = [
-  { link: 'http://localhost:2999/', label: 'Contact' },
-  { link: 'http://localhost:2999/', label: 'About Us' },
-  { link: 'http://localhost:2999/', label: 'Privacy' },
-  { link: 'http://localhost:2999/', label: 'Careers' },
+  { link: 'http://localhost:80/', label: 'Contact' },
+  { link: 'http://localhost:80/', label: 'About Us' },
+  { link: 'http://localhost:80/', label: 'Privacy' },
+  { link: 'http://localhost:80/', label: 'Careers' },
 ];
 
 export function FooterSimple() {

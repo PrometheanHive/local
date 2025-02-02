@@ -140,17 +140,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #cors stuff
 
 CORS_ORIGIN_WHITELIST = [
-     'http://localhost:2999',
-     'http://0.0.0.0:2999'
+     'http://localhost:80',
+     'http://0.0.0.0:80'
 ]
 
 CORS_ALLOWED_ORIGINS = [
-"http://localhost:2999",
-'http://0.0.0.0:2999'
+"http://localhost:80",
+'http://0.0.0.0:80'
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 'http://localhost:2999',
-     'http://0.0.0.0:2999']
+CSRF_TRUSTED_ORIGINS = [ 'http://localhost:80',
+     'http://0.0.0.0:80']
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
