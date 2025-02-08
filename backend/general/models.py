@@ -19,7 +19,7 @@ class Event(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     unique_aspect = models.TextField(blank=True)
-    host = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,  blank=True, related_name='host')
+    host = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='host')
     created_at = models.DateTimeField( blank=True, null=True)
     #tags = models.ManyToManyField(EventTags,  blank=True)
     number_of_guests = models.PositiveIntegerField(default=1, blank=True, null=True)

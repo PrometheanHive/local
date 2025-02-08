@@ -29,6 +29,8 @@ ALLOWED_HOSTS = ['*'] #TODO what does this do
 
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
+CORS_ALLOW_HEADERS = ["*"]
 
 # Application definition
 
@@ -140,17 +142,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #cors stuff
 
 CORS_ORIGIN_WHITELIST = [
-     'http://localhost:80',
-     'http://0.0.0.0:80'
+     'http://localhost',
+     'http://0.0.0.0'
 ]
 
 CORS_ALLOWED_ORIGINS = [
-"http://localhost:80",
-'http://0.0.0.0:80'
+"http://localhost",
+'http://0.0.0.0'
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 'http://localhost:80',
-     'http://0.0.0.0:80']
+CSRF_TRUSTED_ORIGINS = [ 'http://localhost',
+     'http://0.0.0.0']
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 

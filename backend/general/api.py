@@ -112,14 +112,13 @@ def create_user(request, payload: UserSchema):
 
 @router.post("user/authenticate")
 def authenticate_user(request, payload: AuthSchema):
-    user = authenticate(**payload.dict())
-    if user is not None: 
+    user = authenticate(username=payload.username, password=payload.password)
+    
+    if user is not None:
         login(request, user)    
-        return {"message": "User authenticated successfully", "user_id": user.id}
+        return JsonResponse({"message": "User authenticated successfully", "user_id": user.id}, status=200)
     else: 
-        # If authentication fails, return an error message
-        return {"message":"Error authenticating user"}
-        #raise HttpError(401, "Invalid username or password")
+        return JsonResponse({"message": "Error authenticating user"}, status=401)
 
 @router.post("/user/logout")
 def logout_user(request):
