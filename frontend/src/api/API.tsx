@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const API_BASE = "http://" + document.location.hostname + ":5000/api";
+export const API_BASE = "https://" + document.location.hostname + ":5000/api";
 
 
 class Api {
