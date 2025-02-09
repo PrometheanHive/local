@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     allowedHosts: ['demo.experiencebylocals.com'],
     host: '0.0.0.0',
-    port: 80,
+    port: 443,
   },
   test: {
     globals: true,

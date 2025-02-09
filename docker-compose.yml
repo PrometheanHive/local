@@ -26,11 +26,14 @@ services:
       context: backend/.
       dockerfile: Dockerfile
     command: python3.11 manage.py runserver 0.0.0.0:5000
+    #command: gunicorn --workers=3 --bind 0.0.0.0:5000 src.wsgi:application  # Use Gunicorn in production
     volumes: 
       - "./backend/:/tmp/backend-root"
       - ./backend:/backend
-    ports:
-      - "5000:5000"
+    #ports:
+    #  - "5000:5000"
+    expose:
+      - "5000" # Keep backend available internally for AWS ALB but not expose to public
     depends_on:
       - db
 

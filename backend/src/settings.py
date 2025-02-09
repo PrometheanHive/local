@@ -25,11 +25,11 @@ SECRET_KEY = 'django-insecure-ys2%4h5a2p-d6+d_t+02k(kah1i+u_@x%u2dzz!@#v*+9a8&p)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*'] #TODO what does this do
+ALLOWED_HOSTS = ['*', "demo.experiencebylocals.com", "backend", "localhost"] #TODO what does this do
 
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
+CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS", "PUT", "DELETE" ]
 CORS_ALLOW_HEADERS = ["*"]
 
 # Application definition
@@ -163,7 +163,8 @@ CORS_ORIGIN_WHITELIST = [
 
 CORS_ALLOWED_ORIGINS = [
     'https://localhost',
-    'https://0.0.0.0'
+    'https://0.0.0.0',
+    "https://demo.experiencebylocals.com"
 ]
 
 CSRF_TRUSTED_ORIGINS = [ 
