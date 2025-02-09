@@ -2,14 +2,15 @@ import axios from 'axios';
 
 // Ensure API_BASE uses HTTPS and does NOT include port 5000
 export const API_BASE =
-  process.env.NODE_ENV === "production"
-    ? "https://demo.experiencebylocals.com/api"  //  Production API (No Port 5000)
-    : "http://localhost:5000/api";  //  Local Development
+window.location.hostname === "demo.experiencebylocals.com"
+  ? "https://demo.experiencebylocals.com/api"  // Use ALB in production
+  : "http://localhost:5000/api";  // Keep localhost for development
 
 // Create an Axios instance with default settings
 const instance = axios.create({
   baseURL: API_BASE,
   withCredentials: true,  //  Ensures cookies & authentication tokens work
+  timeout: 1000,  // Prevents infinite waiting (10s timeout)
   headers: {
     'Content-Type': 'application/json'
   }

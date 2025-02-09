@@ -25,6 +25,12 @@ SECRET_KEY = 'django-insecure-ys2%4h5a2p-d6+d_t+02k(kah1i+u_@x%u2dzz!@#v*+9a8&p)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"  # Use environment variable
 
+# Ensure Django trusts AWS ALB for HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Force HTTPS in production
+SECURE_SSL_REDIRECT = True  # Redirect all HTTP requests to HTTPS
+
 SECURE_BROWSER_XSS_FILTER = True  # Protects against XSS attacks
 SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevents MIME-type security risks
 SESSION_COOKIE_SECURE = True  # Ensures cookies are sent over HTTPS only
@@ -169,7 +175,13 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-CORS_ALLOW_HEADERS = ["*"]  # Ensures frontend can send required headers
+CORS_ALLOW_HEADERS = [
+    "*",
+    "Content-Type",  # Must be explicitly allowed
+    "Authorization",
+    "X-CSRFToken",
+    "X-Requested-With"
+]  # Ensures frontend can send required headers
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 

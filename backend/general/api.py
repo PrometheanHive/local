@@ -52,25 +52,30 @@ class ReviewSchema(Schema):
 #Events
 @router.get("/event/get_all", response=List[dict])
 def list_all_events(request):
-    events = models.Event.objects.all().select_related('host')  # Use select_related to optimize DB queries
+    events = models.Event.objects.all().select_related('host')
+
+    if not events.exists():  # Ensure an array is always returned
+        return []
+
     event_data = [
         {
             'id': event.id,
             'title': event.title,
-            'description':event.description,
+            'description': event.description,
             'unique_aspect': event.unique_aspect,
             'number_of_guests': event.number_of_guests,
             'number_of_bookings': event.number_of_bookings,
             'occurence_date': event.occurence_date,
             'location': event.location,
             'price': event.price,
-            'host_username': event.host.username,  
-            'host_first_name': event.host.first_name, 
-            'photos': event.photos
+            'host_username': event.host.username,
+            'host_first_name': event.host.first_name,
+            'photos': event.photos or [],  # Prevent `NoneType` errors
         }
         for event in events
     ]
     return event_data
+
 
 @router.get("/event/id/{event_id}", response=dict)
 def get_experience(request, event_id: int):
@@ -95,11 +100,11 @@ def get_experience(request, event_id: int):
 #Example of an endpoint that needs auth. Passing in the auth=django_auth for auth
 @router.get("/user", auth=django_auth)
 def get_user(request):
-    print(request.user)
     if request.user.is_authenticated:
-        return {"username": request.user.first_name, "email": request.user.email}
+        return {"username": request.user.username, "email": request.user.email}
     else:
-        return JsonResponse({"error": "Not authenticated"}, status=401)
+        return JsonResponse({"user": None}, status=200)  # Return `{user: null}` instead of `401`
+
 
 @router.post("/user/create")
 def create_user(request, payload: UserSchema):
@@ -110,23 +115,27 @@ def create_user(request, payload: UserSchema):
     print(user)
     return {'id': user.id}
 
-@router.post("user/authenticate")
+@router.post("/user/authenticate")
 def authenticate_user(request, payload: AuthSchema):
     user = authenticate(**payload.dict())
-    if user is not None: 
-        login(request, user)    
-        return {"message": "User authenticated successfully", "user_id": user.id}
-    else: 
-        # If authentication fails, return an error message
-        return {"message":"Error authenticating user"}
-        #raise HttpError(401, "Invalid username or password")
+
+    if user is not None:
+        login(request, user)
+        return JsonResponse({"message": "User authenticated successfully", "user_id": user.id}, status=200)
+    else:
+        return JsonResponse({"error": "Invalid username or password"}, status=401)  # Return proper HTTP status
+
 
 @router.post("/user/logout")
 def logout_user(request):
-    logout(request) 
-    response = JsonResponse({"message": "User logged out successfully"}) 
-    response.delete_cookie('sessionid', samesite='Lax')  # Example adjustment
+    logout(request)
+    response = JsonResponse({"message": "User logged out successfully"})
+    
+    # Properly clear session cookie
+    response.delete_cookie('sessionid', samesite='Lax', path='/')
+
     return response
+
 
 
  #Reviews 

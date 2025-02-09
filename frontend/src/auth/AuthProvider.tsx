@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import Api, {API_BASE} from '../api/API';
+import Api, { API_BASE } from '../api/API';
 
 const AuthContext = createContext({});
 
@@ -13,12 +13,17 @@ export const AuthProvider = ({ children }) => {
         const fetchUser = async () => {
             try {
                 const response = await Api.instance.get(`${API_BASE}/general/user`, { withCredentials: true });
-                setUser(response.data); // Adjust according to your API response
-                setIsLoading(false);
+                
+                if (response.data && response.data.username) {
+                    setUser(response.data); // Correctly sets the user if authenticated
+                } else {
+                    setUser(null); // Ensures guest users get `null`
+                }
             } catch (error) {
                 console.error('Error fetching user data:', error);
-                setIsLoading(false);
+                setUser(null); // Ensures failed requests don't break navigation bar
             }
+            setIsLoading(false);
         };
 
         fetchUser();
