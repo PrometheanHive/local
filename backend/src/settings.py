@@ -141,18 +141,35 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #cors stuff
 
+# CORS_ORIGIN_WHITELIST = [
+#     'http://localhost',
+#     'http://0.0.0.0'
+# ]
+
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost',
+#     'http://0.0.0.0'
+# ]
+
+# CSRF_TRUSTED_ORIGINS = [ 
+#     'http://localhost',
+#     'http://0.0.0.0'
+# ]
+
 CORS_ORIGIN_WHITELIST = [
-     'http://localhost',
-     'http://0.0.0.0'
+    'https://localhost',
+    'https://0.0.0.0'
 ]
 
 CORS_ALLOWED_ORIGINS = [
-"http://localhost",
-'http://0.0.0.0'
+    'https://localhost',
+    'https://0.0.0.0'
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 'http://localhost',
-     'http://0.0.0.0']
+CSRF_TRUSTED_ORIGINS = [ 
+    'https://localhost',
+    'https://0.0.0.0'
+]
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
