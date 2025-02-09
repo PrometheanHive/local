@@ -32,23 +32,21 @@ export function NavigationBar() {
                     ) : null}
                 </Group>
                 <Group>
-                    <Link style={{ textDecoration: "none", color: "black" }} to="/sign-in">
-                        <Group ml={50} gap={5} className={classes.links}>
-                            {user ? (
-                                <Link style={{ textDecoration: "none", color: "black" }} to="/sign-in">
-                                    <Text fw={500} size="sm" lh={1} mr={3}>
-                                        Welcome {user.username}
-                                    </Text>
-                                </Link>
-                            ) : (
-                                <Link style={{ textDecoration: "none", color: "black" }} to="/sign-in">
-                                    <Text fw={500} size="sm" lh={1} mr={3}>
-                                        Please sign in
-                                    </Text>
-                                </Link>
-                            )}
-                        </Group>
-                    </Link>
+                    <Group ml={50} gap={5} className={classes.links}>
+                        {user ? (
+                            <Link style={{ textDecoration: "none", color: "black" }} to="/sign-in">
+                                <Text fw={500} size="sm" lh={1} mr={3}>
+                                    Welcome {user.username}
+                                </Text>
+                            </Link>
+                        ) : (
+                            <Link style={{ textDecoration: "none", color: "black" }} to="/sign-in">
+                                <Text fw={500} size="sm" lh={1} mr={3}>
+                                    Please sign in
+                                </Text>
+                            </Link>
+                        )}
+                    </Group>
                 </Group>
             </div>
         </header>
