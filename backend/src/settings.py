@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-ys2%4h5a2p-d6+d_t+02k(kah1i+u_@x%u2dzz!@#v*+9a8&p)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*'] #TODO what does this do
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "demo.experiencebylocals.com",  # Allow AWS ALB and frontend domain
+]
+
 
 
 CORS_ALLOW_CREDENTIALS = True
@@ -140,17 +145,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #cors stuff
 
 CORS_ORIGIN_WHITELIST = [
-     'http://localhost:80',
-     'http://0.0.0.0:80'
+    'http://localhost:80',
+    'http://0.0.0.0:80',
+    "https://demo.experiencebylocals.com"
 ]
 
 CORS_ALLOWED_ORIGINS = [
-"http://localhost:80",
-'http://0.0.0.0:80'
+    "http://localhost:80",
+    'http://0.0.0.0:80',
+    "https://demo.experiencebylocals.com"
+
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 'http://localhost:80',
-     'http://0.0.0.0:80']
+CSRF_TRUSTED_ORIGINS = [ 
+    'http://localhost:80',
+    'http://0.0.0.0:80',
+    "https://demo.experiencebylocals.com"
+]
+
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+CORS_ALLOW_HEADERS = ["*"]  # Ensures frontend can send required headers
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
