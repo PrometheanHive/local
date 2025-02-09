@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,7 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ys2%4h5a2p-d6+d_t+02k(kah1i+u_@x%u2dzz!@#v*+9a8&p)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"  # Use environment variable
+
+SECURE_BROWSER_XSS_FILTER = True  # Protects against XSS attacks
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevents MIME-type security risks
+SESSION_COOKIE_SECURE = True  # Ensures cookies are sent over HTTPS only
+CSRF_COOKIE_SECURE = True  # Ensures CSRF cookies are sent over HTTPS only
 
 ALLOWED_HOSTS = [
     "localhost",
