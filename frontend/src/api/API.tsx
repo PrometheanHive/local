@@ -2,18 +2,18 @@ import axios from 'axios';
 
 // Ensure API_BASE uses HTTPS and does NOT include port 5000
 export const API_BASE =
-window.location.hostname === "demo.experiencebylocals.com"
-  ? "https://demo.experiencebylocals.com/api"  // Use ALB in production
-  : "http://localhost:5000/api";  // Keep localhost for development
+  window.location.hostname === "demo.experiencebylocals.com"
+    ? "https://demo.experiencebylocals.com/api"  // Use ALB in production
+    : "http://localhost:5000/api";  // Keep localhost for development
 
 // Create an Axios instance with default settings
 const instance = axios.create({
   baseURL: API_BASE,
-  withCredentials: true,  //  Ensures cookies & authentication tokens work
-  timeout: 1000,  // Prevents infinite waiting (10s timeout)
+  withCredentials: true,  // Ensures cookies & authentication tokens work
+  timeout: 5000,  // Increase timeout to 5s to handle longer API responses
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
 
 class Api {
@@ -37,13 +37,28 @@ class Api {
     return this.instance.defaults.headers.common['Project-ID'];
   }
 
-  // Centralized Error Handling for API Requests
-  static async request(method: "get" | "post" | "put" | "delete", url: string, data?: any) {
+  // **Centralized API Request Method**
+  static async request(
+    method: "get" | "post" | "put" | "delete",
+    url: string,
+    data?: any
+  ) {
     try {
-      const response = await this.instance.request({ method, url, data });
+      const response = await this.instance.request({
+        method,
+        url,
+        data,
+      });
       return response.data;
     } catch (error: any) {
       console.error(`API Request Error: ${error.message}`, error);
+
+      // 🔹 Handle Unauthorized (401) Responses
+      if (error.response?.status === 401) {
+        console.warn("Unauthorized request! Redirecting to login...");
+        window.location.href = "/sign-in"; // Redirect guest users to login page
+      }
+
       throw error;
     }
   }

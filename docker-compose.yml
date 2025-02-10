@@ -26,14 +26,14 @@ services:
       context: backend/.
       dockerfile: Dockerfile
     #command: python3.11 manage.py runserver 0.0.0.0:5000
-    command: gunicorn --workers=2 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application  # Use Gunicorn instead of `runserver`
+    command: gunicorn --workers=1 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application  # Use Gunicorn instead of `runserver`
     volumes: 
       - "./backend/:/tmp/backend-root"
       - ./backend:/backend
     ports:
       - "5000:5000"
-
-    #mem_limit: 512m  # Limit to 512MB RAM to prevent OOM kills
+    cpus: "1.0"
+    mem_limit: 512m  # Limit to 512MB RAM to prevent OOM kills
     mem_reservation: 256m  # Ensure it has at least 256MB
     depends_on:
       - db
