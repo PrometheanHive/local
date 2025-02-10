@@ -35,6 +35,7 @@ SECURE_BROWSER_XSS_FILTER = True  # Protects against XSS attacks
 SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevents MIME-type security risks
 SESSION_COOKIE_SECURE = True  # Ensures cookies are sent over HTTPS only
 CSRF_COOKIE_SECURE = True  # Ensures CSRF cookies are sent over HTTPS only
+SESSION_COOKIE_SAMESITE = "None"  # Needed for cross-site requests
 
 ALLOWED_HOSTS = [
     "0.0.0.0",
@@ -188,6 +189,7 @@ CORS_ALLOW_HEADERS = [
     "Content-Type",  # Must be explicitly allowed
     "Authorization",
     "X-CSRFToken",
+    "X-Session-ID",
     "X-Requested-With"
 ]  # Ensures frontend can send required headers
 

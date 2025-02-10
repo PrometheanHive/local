@@ -16,34 +16,38 @@ export function SignIn() {
         event.preventDefault();
         const values = { username: email, password: password };
         console.log("Attempting login...");
-
+    
         try {
             const response = await Api.instance.post(`${API_BASE}/general/user/authenticate`, values, { withCredentials: true });
+    
             if (response.data && response.data.user_id) {
                 setUser(response.data.user_id);
-
+    
                 CometChatUIKit.getLoggedinUser().then((user) => {
                     if (!user) {
                         const cometChatLogin = email.replace(/[@.]/g, '');
-                        CometChatUIKit.login(cometChatLogin).then((user) => {
-                            console.log("Login Successful:", { user });
-                        }).catch((error) => {
-                            console.error("CometChat login failed:", error);
-                            setError("Incorrect username/password");
-                        });
+                        CometChatUIKit.login(cometChatLogin)
+                            .then((user) => console.log("Login Successful:", { user }))
+                            .catch((error) => {
+                                console.error("CometChat login failed:", error);
+                                setError("Incorrect username/password");
+                            });
                     }
                 });
-
-                // Avoid full page reload
-                // window.location.reload();
+    
+                // 🔹 Redirect to homepage and refresh to reflect login state
+                window.location.href = '/';
+    
             } else {
                 setError("Incorrect username/password");
             }
+    
         } catch (error) {
             console.error('Login request failed:', error);
             setError("Incorrect username/password");
         }
     };
+    
 
     if (user) {
         return <AccountSettings user={user} />;

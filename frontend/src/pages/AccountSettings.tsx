@@ -37,18 +37,21 @@ export function AccountSettings({ user }) {
             await Api.instance.post(`${API_BASE}/general/user/logout`, {}, { withCredentials: true });
             await CometChatUIKit.logout();
             console.log("Logout successful");
-            navigate('/');
+    
+            window.location.href = '/'; // Refresh and redirect to homepage
+    
         } catch (error) {
             console.error("Logout failed:", error);
         }
     };
+    
 
     return (
         <Container my={40}>
             <Paper padding="md">
                 <Title order={1} align="center" mb="lg">Profile</Title>
 
-                {/* ✅ Account Details */}
+                {/*  Account Details */}
                 <Card shadow="sm" p="lg">
                     <Stack spacing="sm">
                         <Title order={2}>Account details</Title>
@@ -63,7 +66,7 @@ export function AccountSettings({ user }) {
 
                 <Divider my="lg" />
 
-                {/* ✅ User Bookings */}
+                {/*  User Bookings */}
                 <Card shadow="sm">
                     <Stack spacing="sm">
                         <Title order={2}>Your Bookings</Title>
@@ -81,7 +84,7 @@ export function AccountSettings({ user }) {
 
                 <Divider my="lg" />
 
-                {/* ✅ Payment Methods */}
+                {/*  Payment Methods */}
                 <Card shadow="sm">
                     <Stack spacing="sm">
                         <Title order={2}>Payment methods</Title>
@@ -93,7 +96,7 @@ export function AccountSettings({ user }) {
 
                 <Divider my="lg" />
 
-                {/* ✅ Logout Button */}
+                {/* Logout Button */}
                 <Card shadow="sm">
                     <Stack spacing="sm">
                         <Button onClick={handleLogout} color="red">Logout</Button>
