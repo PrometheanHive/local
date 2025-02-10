@@ -9,7 +9,7 @@ from . import models
 router = Router()
 UserModel = auth.get_user_model()
 
-### 📌 FIX: Ensure all API responses explicitly allow credentials ###
+###  FIX: Ensure all API responses explicitly allow credentials ###
 def json_response(data, status=200):
     response = JsonResponse(data, status=status)
     response["Access-Control-Allow-Credentials"] = "true"
@@ -21,16 +21,16 @@ def json_response(data, status=200):
 
 @router.get("/user")
 def get_user(request):
-    """ ✅ FIX: Ensure frontend doesn't crash by returning `user: null` when unauthorized """
+    """ FIX: Ensure frontend doesn't crash by returning `user: null` when unauthorized """
     if request.user.is_authenticated:
         return json_response({"username": request.user.username, "email": request.user.email})
     else:
-        return json_response({"user": None}, status=200)  # ✅ Fix: Return `{ user: null }` instead of `401`
+        return json_response({"user": None}, status=200)  # Fix: Return `{ user: null }` instead of `401`
 
 
 @router.post("/user/authenticate")
 def authenticate_user(request, payload: Schema):
-    """ ✅ FIX: Properly log in user & send `sessionid` cookie for authentication """
+    """ FIX: Properly log in user & send `sessionid` cookie for authentication """
     user = authenticate(username=payload.username, password=payload.password)
     
     if user is not None:
@@ -41,7 +41,7 @@ def authenticate_user(request, payload: Schema):
             "user_id": user.id
         })
 
-        # ✅ Fix: Ensure sessionid is included in response
+        # Fix: Ensure sessionid is included in response
         response.set_cookie(
             "sessionid", request.session.session_key,
             httponly=True, secure=True, samesite="None"
@@ -54,11 +54,11 @@ def authenticate_user(request, payload: Schema):
 
 @router.post("/user/logout")
 def logout_user(request):
-    """ ✅ FIX: Properly clear session & remove session cookie on logout """
+    """ FIX: Properly clear session & remove session cookie on logout """
     logout(request)
     response = json_response({"message": "User logged out successfully"})
     
-    # ✅ Ensure session cookie is properly deleted
+    # Ensure session cookie is properly deleted
     response.delete_cookie("sessionid", path="/", samesite="Lax")
 
     return response
@@ -70,7 +70,7 @@ def logout_user(request):
 
 @router.get("/event/get_all", response=List[dict])
 def list_all_events(request):
-    """ ✅ FIX: Ensure API returns an empty array instead of `None` """
+    """ FIX: Ensure API returns an empty array instead of `None` """
     events = models.Event.objects.all().select_related('host')
 
     event_data = [
@@ -86,17 +86,17 @@ def list_all_events(request):
             'price': event.price,
             'host_username': event.host.username,
             'host_first_name': event.host.first_name,
-            'photos': event.photos or [],  # ✅ Fix: Prevents `NoneType` errors
+            'photos': event.photos or [],  # Fix: Prevents `NoneType` errors
         }
         for event in events
     ]
 
-    return json_response(event_data)  # ✅ Ensure API always returns an array
+    return json_response(event_data)  # Ensure API always returns an array
 
 
 @router.get("/user/bookings")
 def get_user_bookings(request):
-    """ ✅ FIX: Ensure proper authentication & return empty array if unauthorized """
+    """ FIX: Ensure proper authentication & return empty array if unauthorized """
     if request.user.is_authenticated:
         bookings = models.Booking.objects.filter(guest=request.user).select_related('event')
         booking_data = [
