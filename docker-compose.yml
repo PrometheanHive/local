@@ -33,7 +33,7 @@ services:
     ports:
       - "5000:5000"
 
-    mem_limit: 512m  # Limit to 512MB RAM to prevent OOM kills
+    #mem_limit: 512m  # Limit to 512MB RAM to prevent OOM kills
     mem_reservation: 256m  # Ensure it has at least 256MB
     depends_on:
       - db

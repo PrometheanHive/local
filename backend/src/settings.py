@@ -39,7 +39,7 @@ CSRF_COOKIE_SECURE = True  # Ensures CSRF cookies are sent over HTTPS only
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "demo.experiencebylocals.com",  # Allow AWS ALB and frontend domain
+    "demo.experiencebylocals.com"  # Allow AWS ALB and frontend domain
 ]
 
 
@@ -156,21 +156,27 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #cors stuff
 
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:80',
-    'http://0.0.0.0:80',
+    'https://localhost',
+    'https://0.0.0.0',
+    'http://localhost',
+    'http://0.0.0.0',
     "https://demo.experiencebylocals.com"
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:80",
-    'http://0.0.0.0:80',
+    'https://localhost',
+    'https://0.0.0.0',
+    "http://localhost",
+    'http://0.0.0.0',
     "https://demo.experiencebylocals.com"
 
 ]
 
 CSRF_TRUSTED_ORIGINS = [ 
-    'http://localhost:80',
-    'http://0.0.0.0:80',
+    'https://localhost',
+    'https://0.0.0.0',
+    'http://localhost',
+    'http://0.0.0.0',
     "https://demo.experiencebylocals.com"
 ]
 
