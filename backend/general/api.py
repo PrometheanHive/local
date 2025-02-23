@@ -5,9 +5,18 @@ from django.http import JsonResponse
 from typing import List
 from django.shortcuts import get_object_or_404
 from . import models
+import os
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+from django.http import JsonResponse
+from ninja import Router, File
+from ninja.files import UploadedFile
 
 router = Router()
 UserModel = auth.get_user_model()
+
+UPLOAD_DIR = "/var/www/uploads/"  # Change this to your preferred EC2 storage path
 
 ###  FIX: Ensure all API responses explicitly allow credentials ###
 def json_response(data, status=200):
@@ -18,6 +27,25 @@ def json_response(data, status=200):
 # ============================
 # 🔹 AUTHENTICATION ENDPOINTS
 # ============================
+
+
+
+@router.post("/upload")
+def upload_file(request, file: UploadedFile = File(...)):
+    """Handles file uploads and stores them on the EC2 attached volume."""
+    
+    if not os.path.exists(UPLOAD_DIR):
+        os.makedirs(UPLOAD_DIR)  # Ensure directory exists
+
+    file_path = os.path.join(UPLOAD_DIR, file.name)
+
+    # Save file to local storage
+    with open(file_path, "wb") as f:
+        for chunk in file.chunks():
+            f.write(chunk)
+
+    # Return the accessible file path
+    return JsonResponse({"fileUrl": f"/media/{file.name}"})  # URL for frontend access
 
 @router.get("/user")
 def get_user(request):
