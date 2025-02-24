@@ -1,31 +1,67 @@
 import axios from 'axios';
 
-export const API_BASE = "http://" + document.location.hostname + ":5000/api";
+// Ensure API_BASE uses HTTPS and does NOT include port 5000
+export const API_BASE =
+  window.location.hostname === "demo.experiencebylocals.com"
+    ? "https://demo.experiencebylocals.com/api"  // Use ALB in production
+    : "http://localhost:5000/api";  // Keep localhost for development
 
+// Create an Axios instance with default settings
+const instance = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true,  // Ensures cookies & authentication tokens work
+  timeout: 5000,  // Increase timeout to 5s to handle longer API responses
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 class Api {
-  static instance = axios.create();
+  static instance = instance;
 
-  static updateSessionID(sessionId) {
-    console.log("Session ID updated.");
+  static updateSessionID(sessionId: string) {
+    console.log("Session ID updated:", sessionId);
     this.instance.defaults.headers.common['X-Session-ID'] = sessionId;
   }
 
-  static getSessionID() {
-    return this.instance.defaults.headers.common['X-Session-ID']
+  static getSessionID(): string | undefined {
+    return this.instance.defaults.headers.common['X-Session-ID'];
   }
 
-  static setProjectID(projectId){
-    console.log('project id updated');
+  static setProjectID(projectId: string) {
+    console.log('Project ID updated:', projectId);
     this.instance.defaults.headers.common['Project-ID'] = projectId;
   }
 
-  static getProjectID(){
-    return this.instance.defaults.headers.common['Project-ID']
+  static getProjectID(): string | undefined {
+    return this.instance.defaults.headers.common['Project-ID'];
   }
 
-}
+  // **Centralized API Request Method**
+  static async request(
+    method: "get" | "post" | "put" | "delete",
+    url: string,
+    data?: any
+  ) {
+    try {
+      const response = await this.instance.request({
+        method,
+        url,
+        data,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error(`API Request Error: ${error.message}`, error);
 
-// API.defaults.baseURLS 
+      // 🔹 Handle Unauthorized (401) Responses
+      if (error.response?.status === 401) {
+        console.warn("Unauthorized request! Redirecting to login...");
+        window.location.href = "/sign-in"; // Redirect guest users to login page
+      }
+
+      throw error;
+    }
+  }
+}
 
 export default Api;

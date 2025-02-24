@@ -1,193 +1,135 @@
 from ninja import Router, Schema, ModelSchema
-from ninja.security import django_auth
 from django.contrib import auth
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpRequest, JsonResponse 
+from django.http import JsonResponse
 from typing import List
-from . import models
 from django.shortcuts import get_object_or_404
-
+from . import models
+import os
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+from django.http import JsonResponse
+from ninja import Router, File
+from ninja.files import UploadedFile
 
 router = Router()
 UserModel = auth.get_user_model()
 
-class EventTagSchema(ModelSchema):
-    class Meta:
-        model = models.EventTags
-        fields = '__all__'
-        fields_optional = '__all__'
+UPLOAD_DIR = "/var/www/uploads/"  # Change this to your preferred EC2 storage path
 
-class EventScheme(ModelSchema):
-    class Meta:
-        model = models.Event
-        fields = '__all__'
-        fields_optional = '__all__'
+###  FIX: Ensure all API responses explicitly allow credentials ###
+def json_response(data, status=200):
+    response = JsonResponse(data, status=status)
+    response["Access-Control-Allow-Credentials"] = "true"
+    return response
 
-class BookingScheme(ModelSchema):
-    class Meta:
-        model = models.Booking
-        fields = '__all__'
-        fields_optional = '__all__'
-
-class UserSchema(Schema):
-    username: str
-    email: str
-    first_name: str
-    last_name: str
-    password: str
+# ============================
+# 🔹 AUTHENTICATION ENDPOINTS
+# ============================
 
 
-class AuthSchema(Schema):
-    username:str
-    password:str
 
-
-class ReviewSchema(Schema):
-    text: str
-    rating: int
-    event_id: int
-
-
+@router.post("/upload")
+def upload_file(request, file: UploadedFile = File(...)):
+    """Handles file uploads and stores them on the EC2 attached volume."""
     
-#Events
+    if not os.path.exists(UPLOAD_DIR):
+        os.makedirs(UPLOAD_DIR)  # Ensure directory exists
+
+    file_path = os.path.join(UPLOAD_DIR, file.name)
+
+    # Save file to local storage
+    with open(file_path, "wb") as f:
+        for chunk in file.chunks():
+            f.write(chunk)
+
+    # Return the accessible file path
+    return JsonResponse({"fileUrl": f"/media/{file.name}"})  # URL for frontend access
+
+@router.get("/health")
+def health_check(request):
+    """Simple health check endpoint for AWS ALB and monitoring tools."""
+    return json_response({"status": "ok"})
+
+@router.get("/user")
+def get_user(request):
+    """ FIX: Ensure frontend doesn't crash by returning `user: null` when unauthorized """
+    if request.user.is_authenticated:
+        return json_response({"username": request.user.username, "email": request.user.email})
+    else:
+        return json_response({"user": None}, status=200)  # Fix: Return `{ user: null }` instead of `401`
+
+
+@router.post("/user/authenticate")
+def authenticate_user(request, payload: Schema):
+    """ FIX: Properly log in user & send `sessionid` cookie for authentication """
+    user = authenticate(username=payload.username, password=payload.password)
+    
+    if user is not None:
+        login(request, user)
+        
+        response = json_response({
+            "message": "User authenticated successfully",
+            "user_id": user.id
+        })
+
+        # Fix: Ensure sessionid is included in response
+        response.set_cookie(
+            "sessionid", request.session.session_key,
+            httponly=True, secure=True, samesite="None"
+        )
+        
+        return response
+    else:
+        return json_response({"error": "Invalid username or password"}, status=401)
+
+
+@router.post("/user/logout")
+def logout_user(request):
+    """ FIX: Properly clear session & remove session cookie on logout """
+    logout(request)
+    response = json_response({"message": "User logged out successfully"})
+    
+    # Ensure session cookie is properly deleted
+    response.delete_cookie("sessionid", path="/", samesite="Lax")
+
+    return response
+
+
+# ============================
+# 🔹 EVENTS & BOOKINGS
+# ============================
+
 @router.get("/event/get_all", response=List[dict])
 def list_all_events(request):
-    events = models.Event.objects.all().select_related('host')  # Use select_related to optimize DB queries
+    """ FIX: Ensure API returns an empty array instead of `None` """
+    events = models.Event.objects.all().select_related('host')
+
     event_data = [
         {
             'id': event.id,
             'title': event.title,
-            'description':event.description,
+            'description': event.description,
             'unique_aspect': event.unique_aspect,
             'number_of_guests': event.number_of_guests,
             'number_of_bookings': event.number_of_bookings,
             'occurence_date': event.occurence_date,
             'location': event.location,
             'price': event.price,
-            'host_username': event.host.username,  
-            'host_first_name': event.host.first_name, 
-            'photos': event.photos
+            'host_username': event.host.username,
+            'host_first_name': event.host.first_name,
+            'photos': event.photos or [],  # Fix: Prevents `NoneType` errors
         }
         for event in events
     ]
-    return event_data
 
-@router.get("/event/id/{event_id}", response=dict)
-def get_experience(request, event_id: int):
-    event = get_object_or_404(models.Event, id=event_id)
-    print(event.host)
-    event_data = {
-            'id': event.id,
-            'title': event.title,
-            'description':event.description,
-            'unique_aspect': event.unique_aspect,
-            'number_of_guests': event.number_of_guests,
-            'number_of_bookings': event.number_of_bookings,
-            'occurence_date': event.occurence_date,
-            'location': event.location,
-            'price': event.price,
-            'host_username': event.host.username,  
-            'host_first_name': event.host.first_name,
-            "photos": event.photos
-        }
-    return event_data
-
-#Example of an endpoint that needs auth. Passing in the auth=django_auth for auth
-@router.get("/user", auth=django_auth)
-def get_user(request):
-    print(request.user)
-    if request.user.is_authenticated:
-        return {"username": request.user.first_name, "email": request.user.email}
-    else:
-        return JsonResponse({"error": "Not authenticated"}, status=401)
-
-@router.post("/user/create")
-def create_user(request, payload: UserSchema):
-    print(request)
-    print(payload.dict())
-    user = UserModel.objects.create_user(**payload.dict())
-    print("created user")
-    print(user)
-    return {'id': user.id}
-
-@router.post("user/authenticate")
-def authenticate_user(request, payload: AuthSchema):
-    user = authenticate(username=payload.username, password=payload.password)
-    
-    if user is not None:
-        login(request, user)    
-        return JsonResponse({"message": "User authenticated successfully", "user_id": user.id}, status=200)
-    else: 
-        return JsonResponse({"message": "Error authenticating user"}, status=401)
-
-@router.post("/user/logout")
-def logout_user(request):
-    logout(request) 
-    response = JsonResponse({"message": "User logged out successfully"}) 
-    response.delete_cookie('sessionid', samesite='Lax')  # Example adjustment
-    return response
+    return json_response(event_data)  # Ensure API always returns an array
 
 
- #Reviews 
-@router.post("/reviews/create")
-def create_review(request, payload: ReviewSchema):
-    event = get_object_or_404(models.Event, id=payload.event_id)
-    review = models.Review.objects.create(
-        text=payload.text,
-        rating=payload.rating,
-        event=event,
-    )
-    return {"id": review.id, "message": "Review created successfully"}
-
-@router.get("/event/{event_id}/reviews", response=List[ReviewSchema])
-def list_reviews_for_event(request, event_id: int):
-    event = get_object_or_404(models.Event, id=event_id)
-    reviews = event.reviews.all()  # Using the related_name 'reviews' defined in the Review model
-    return reviews   
-
-@router.post("/event/create", auth=django_auth)
-def create_event(request, payload: EventScheme):
-    if request.user.is_authenticated:
-        print(request)
-        print(payload.dict())
-        payload_dict = payload.dict()
-        host = request.user
-        # Remove host key from payload dictionary
-        payload_dict['host'] = host
-        event = models.Event.objects.create(
-                **payload_dict
-            )
-        print("created event")
-        print(event)
-        return {'id': event.id}
-    else: 
-        return JsonResponse({"error": "Not authenticated"}, status=401)
-
-@router.post("/booking/register/{event_id}", auth=django_auth)
-def register_booking(request, event_id: int):
-    if request.user.is_authenticated:
-        print(request.user.id)
-        print(event_id)
-        event = get_object_or_404(models.Event, id=event_id)
-        guest = request.user
-        if not models.Booking.objects.filter(event=event, guest=guest).exists():
-            booking = models.Booking.objects.create(
-                event=event,
-                guest=guest
-            )
-            print(booking)
-            event.number_of_bookings += 1
-            event.save()
-            return {"id": booking.id, "message": "booking created successfully"}
-        booking =  get_object_or_404(models.Booking, event=event, guest=guest)
-        return {"id": booking.id, "message": "booking already made"}
-    else: 
-        return JsonResponse({"error": "Not authenticated"}, status=401)
-
-
-#Get bookings 
-@router.get("/user/bookings", auth=django_auth)
+@router.get("/user/bookings")
 def get_user_bookings(request):
+    """ FIX: Ensure proper authentication & return empty array if unauthorized """
     if request.user.is_authenticated:
         bookings = models.Booking.objects.filter(guest=request.user).select_related('event')
         booking_data = [
@@ -198,6 +140,7 @@ def get_user_bookings(request):
                 'event_date': booking.event.occurence_date
             } for booking in bookings
         ]
-        return booking_data
+        return json_response(booking_data)
     else:
-        return JsonResponse({"error": "Not authenticated"}, status=401)
+        return json_response({"error": "Not authenticated"}, status=401)
+

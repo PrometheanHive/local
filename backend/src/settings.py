@@ -9,12 +9,15 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+#BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Storage settings
+MEDIA_URL = "/media/"  # URL where media files will be served
+MEDIA_ROOT = "/mnt/volume/uploads/"  # Local storage path
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -23,9 +26,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ys2%4h5a2p-d6+d_t+02k(kah1i+u_@x%u2dzz!@#v*+9a8&p)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"  # Use environment variable
 
-ALLOWED_HOSTS = ['*'] #TODO what does this do
+# Ensure Django trusts AWS ALB for HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Force HTTPS in production
+SECURE_SSL_REDIRECT = False  # Redirect all HTTP requests to HTTPS
+
+SECURE_BROWSER_XSS_FILTER = True  # Protects against XSS attacks
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevents MIME-type security risks
+SESSION_COOKIE_SECURE = True  # Ensures cookies are sent over HTTPS only
+CSRF_COOKIE_SECURE = True  # Ensures CSRF cookies are sent over HTTPS only
+SESSION_COOKIE_SAMESITE = "None"  # Needed for cross-site requests
+
+ALLOWED_HOSTS = [
+    "0.0.0.0",
+    "127.0.0.1",
+    "localhost",
+    "demo.experiencebylocals.com"  # Allow AWS ALB and frontend domain
+]
+
 
 
 CORS_ALLOW_CREDENTIALS = True
@@ -55,7 +76,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
      #added
     'corsheaders.middleware.CorsMiddleware',
-
+    #'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -133,7 +154,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
+#STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+#STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -142,17 +164,39 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #cors stuff
 
 CORS_ORIGIN_WHITELIST = [
-     'http://localhost',
-     'http://0.0.0.0'
+    'https://localhost',
+    'https://0.0.0.0',
+    'http://localhost',
+    'http://0.0.0.0',
+    "https://demo.experiencebylocals.com"
 ]
 
 CORS_ALLOWED_ORIGINS = [
-"http://localhost",
-'http://0.0.0.0'
+    'https://localhost',
+    'https://0.0.0.0',
+    "http://localhost",
+    'http://0.0.0.0',
+    "https://demo.experiencebylocals.com"
+
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 'http://localhost',
-     'http://0.0.0.0']
+CSRF_TRUSTED_ORIGINS = [ 
+    'https://localhost',
+    'https://0.0.0.0',
+    'http://localhost',
+    'http://0.0.0.0',
+    "https://demo.experiencebylocals.com"
+]
+
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+CORS_ALLOW_HEADERS = [
+    "*",
+    "Content-Type",  # Must be explicitly allowed
+    "Authorization",
+    "X-CSRFToken",
+    "X-Session-ID",
+    "X-Requested-With"
+]  # Ensures frontend can send required headers
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 

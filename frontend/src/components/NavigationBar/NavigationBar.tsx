@@ -15,7 +15,8 @@ const userTest = {
 
 export function NavigationBar() {
     const [opened, { toggle }] = useDisclosure(false);
-    const { user, setUser } = useAuth();
+    const { user } = useAuth(); // Remove setUser, since it's not used
+
 
     return (
         <header className={classes.header}>
