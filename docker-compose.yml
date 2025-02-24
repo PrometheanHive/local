@@ -13,7 +13,7 @@ services:
     volumes:
       - ./backend:/data
     ports:
-    - 8080:8080
+      - 8080:8080
     environment:
       - SQLITE_WEB_PASSWORD=local
     command: sqlite_web -H 0.0.0.0 -x db.sqlite3 --password
@@ -25,33 +25,40 @@ services:
     build:
       context: backend/.
       dockerfile: Dockerfile
-    #command: python3.11 manage.py runserver 0.0.0.0:5000
-    command: gunicorn --workers=1 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application  # Use Gunicorn instead of `runserver`
+    command: gunicorn --workers=2 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application
     volumes: 
-      - "./backend/:/tmp/backend-root"
       - ./backend:/backend
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"  # Expose the backend instead of binding it to host
     cpus: "1.0"
-    mem_limit: 512m  # Limit to 512MB RAM to prevent OOM kills
-    mem_reservation: 256m  # Ensure it has at least 256MB
+    mem_limit: 512m
+    mem_reservation: 256m
     depends_on:
       - db
+    environment:
+      - DJANGO_ALLOWED_HOSTS=demo.experiencebylocals.com localhost
+      - DJANGO_CSRF_TRUSTED_ORIGINS=https://demo.experiencebylocals.com
+      
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"  # Only HTTP, since AWS ALB handles HTTPS
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+
 
   frontend:
     container_name: frontend_locale
     build:
       context: frontend/.
       dockerfile: Dockerfile
-    ports:
-      - 80:80
     volumes:
-      - ./frontend/src:/frontend/src
-      - ./frontend/test-utils:/frontend/test-utils
+      - ./frontend/build:/var/www/frontend  # Frontend is served via Nginx
     environment:
       - BACKEND_API_PORT=${BACKEND_API_PORT}
       - CHOKIDAR_USEPOLLING=true
-
-
-  
-  

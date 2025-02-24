@@ -8,22 +8,28 @@ export default defineConfig({
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'), // Ensures correct environment
   },
   server: {
-    allowedHosts: ['demo.experiencebylocals.com', 'localhost'],  // 🔹 Allow both ALB and local dev
+    allowedHosts: ['demo.experiencebylocals.com', 'localhost'],  // 🔹 Allow ALB + local
     host: '0.0.0.0',
     port: 80, // Ensure this matches frontend container port
     strictPort: true,  // Prevents fallback to random ports
 
-    // Fix HMR for production deployment
-    hmr: process.env.NODE_ENV === 'production'
-      ? {
-          protocol: 'wss',
-          host: 'demo.experiencebylocals.com',
-          port: 443,  // Use secure WebSockets via ALB
-        }
-      : undefined,
+    // Fix HMR (Hot Module Replacement) for ALB & local dev
+    hmr:
+      process.env.NODE_ENV === 'production'
+        ? {
+            protocol: 'wss',
+            host: 'demo.experiencebylocals.com',
+            port: 443, // Use secure WebSockets via ALB
+            clientPort: 443,
+          }
+        : {
+            protocol: 'ws',
+            host: 'localhost',
+            port: 3000, // Ensure local dev uses WebSockets correctly
+          },
 
     watch: {
-      usePolling: true,  // Ensures file changes are detected inside Docker
+      usePolling: true, // Ensures file changes are detected inside Docker
     },
   },
   test: {
