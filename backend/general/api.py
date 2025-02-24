@@ -47,6 +47,11 @@ def upload_file(request, file: UploadedFile = File(...)):
     # Return the accessible file path
     return JsonResponse({"fileUrl": f"/media/{file.name}"})  # URL for frontend access
 
+@router.get("/health")
+def health_check(request):
+    """Simple health check endpoint for AWS ALB and monitoring tools."""
+    return json_response({"status": "ok"})
+
 @router.get("/user")
 def get_user(request):
     """ FIX: Ensure frontend doesn't crash by returning `user: null` when unauthorized """

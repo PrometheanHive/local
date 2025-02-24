@@ -32,7 +32,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"  # Use environment variable
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Force HTTPS in production
-SECURE_SSL_REDIRECT = True  # Redirect all HTTP requests to HTTPS
+SECURE_SSL_REDIRECT = False  # Redirect all HTTP requests to HTTPS
 
 SECURE_BROWSER_XSS_FILTER = True  # Protects against XSS attacks
 SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevents MIME-type security risks
