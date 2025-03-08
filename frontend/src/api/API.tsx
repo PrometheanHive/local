@@ -4,7 +4,7 @@ import axios from 'axios';
 export const API_BASE =
   window.location.hostname === "demo.experiencebylocals.com"
     ? "https://demo.experiencebylocals.com/api"  // Use ALB in production
-    : "http://localhost:5000/api";  // Keep localhost for development
+    : "http://backend:5000/api";  // Keep localhost for development
 
 // Create an Axios instance with default settings
 const instance = axios.create({
