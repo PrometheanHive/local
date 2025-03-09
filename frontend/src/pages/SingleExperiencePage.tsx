@@ -1,26 +1,9 @@
-import React from 'react';
+import React from "react";
 import { SingleExperienceView } from "@/components/SingleExperienceView/SingleExperienceView";
-import { Divider, Loader, Center, Text } from '@mantine/core';
-import Api, { API_BASE } from '@/api/API';
-import { useParams } from 'react-router-dom';
-
-interface Review {
-  text: string;
-  rating: number;
-}
-
-interface ExperienceData {
-  id: number;
-  title: string;
-  description: string;
-  unique_aspect: string;
-  price: number;
-  occurence_date: string;
-  location: string;
-  photos?: string[];
-  reviews?: Review[];
-  host_first_name: string; // Ensure this field is defined
-}
+import { Divider, Loader, Center, Text } from "@mantine/core";
+import Api, { API_BASE } from "@/api/API";
+import { useParams } from "react-router-dom";
+import { ExperienceData, Review } from "@/types/ExperienceTypes"; // Import shared types
 
 export function SingleExperiencePage() {
   const [experience, setExperience] = React.useState<ExperienceData | null>(null);
@@ -39,13 +22,11 @@ export function SingleExperiencePage() {
       const reviewsResponse = await Api.instance.get<Review[]>(`${API_BASE}/general/event/${id}/reviews`);
       const reviewsData = reviewsResponse.data;
 
-      // Ensure `host_first_name` exists, fallback to "Unknown Host"
-      const hostFirstName = eventData.host_first_name || "Unknown Host";
-
-      // Combine event data with reviews
+      // Ensure `host_first_name` and `photos` are always defined
       const combinedData: ExperienceData = {
         ...eventData,
-        host_first_name: hostFirstName, //  Ensure this field is set
+        host_first_name: eventData.host_first_name || "Unknown Host", // Default value
+        photos: eventData.photos ?? [], // Ensure `photos` is always a `string[]`
         reviews: reviewsData
       };
 

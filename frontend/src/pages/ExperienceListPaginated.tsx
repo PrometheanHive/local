@@ -1,30 +1,12 @@
-import React from 'react';
+import React from "react";
 import { SingleExperienceView } from "@/components/SingleExperienceView/SingleExperienceView";
-import { Divider, Center, Loader, Text } from '@mantine/core';
-import Api, { API_BASE } from '@/api/API';
-
-// Define the missing ExperienceData type
-interface Review {
-  text: string;
-  rating: number;
-}
-
-interface ExperienceData {
-  id: number;
-  title: string;
-  description: string;
-  unique_aspect: string;
-  price: number;
-  location: string;
-  occurence_date: string;
-  photos?: string[];
-  host_first_name: string; // Ensure this is included
-  reviews?: Review[];
-}
+import { Divider, Center, Loader, Text } from "@mantine/core";
+import Api, { API_BASE } from "@/api/API";
+import { ExperienceData } from "@/types/ExperienceTypes"; // Import the shared type
 
 // Example experience with the correct structure
 const exampleExperience: ExperienceData = {
-  id: 1, 
+  id: 1,
   title: "Go on a hike - title",
   description: "This is a wonderful experience that you'll never forget. Come and enjoy the adventure!",
   unique_aspect: "John is the first person to ever hike in Boulder",
@@ -56,7 +38,8 @@ export function ExperienceListPaginated() {
         // Ensure `host_first_name` is present in each experience
         const experiencesWithHost = response.data.map(experience => ({
           ...experience,
-          host_first_name: experience.host_first_name || "Unknown Host",
+          host_first_name: experience.host_first_name ?? "Unknown Host",
+          photos: experience.photos ?? [] // ✅ Ensures photos is always a `string[]`
         }));
 
         setExperiences(experiencesWithHost);
@@ -91,11 +74,11 @@ export function ExperienceListPaginated() {
   return (
     <>
       {experiences.map((experience) => (
-        <div key={experience.id}>
+        <div key={experience.id}> 
           <SingleExperienceView experienceData={experience} />
           <Divider size="xl" />
         </div>
-      ))}
+      ))}    
     </>
   );
 }
