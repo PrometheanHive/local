@@ -41,29 +41,26 @@ services:
       - DJANGO_ALLOWED_HOSTS=demo.experiencebylocals.com localhost
       - DJANGO_CSRF_TRUSTED_ORIGINS=https://demo.experiencebylocals.com
 
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    restart: always
-    ports:
-      - "80:80"  # Only HTTP, since AWS ALB handles HTTPS
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      #- ./frontend/build:/var/www/frontend
-      - ./frontend/dist:/var/www/frontend
-    depends_on:
-      - backend
-      - frontend
-
-
   frontend:
     container_name: frontend_locale
     build:
       context: frontend/.
       dockerfile: Dockerfile
-    volumes:
-      #- ./frontend/build:/var/www/frontend  # Frontend is served via Nginx
-      - ./frontend/dist:/var/www/frontend
     environment:
       - BACKEND_API_PORT=${BACKEND_API_PORT}
       - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+

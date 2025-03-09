@@ -1,16 +1,26 @@
-# syntax=docker/dockerfile:1
-
-FROM node:20.2.0
-
-RUN mkdir -p /frontend
+# Use Node.js to build frontend
+FROM node:20.2.0 AS builder
 WORKDIR /frontend
 
-ENV PATH /frontend/node_modules/.bin:$PATH
-
-COPY package.json ./
+# Copy package files first for better caching
+COPY package.json package-lock.json ./
 RUN npm install
 
+# Copy the rest of the frontend files
+COPY . .
 
-COPY . ./
+# Build the frontend
+RUN npm run build
 
-CMD ["npm", "run", "dev"]
+# Use Nginx to serve frontend
+FROM nginx:latest
+WORKDIR /usr/share/nginx/html
+
+# Copy built frontend files from the builder stage
+COPY --from=builder /frontend/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
