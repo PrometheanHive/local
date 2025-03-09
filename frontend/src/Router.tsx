@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
-import { useContext } from 'react'; // Import useContext for global state
-import { AuthContext } from './context/AuthContext'; // Import the authentication context
+import { useContext } from 'react';
+import { AuthContext } from './auth/AuthProvider'; // Adjusted path to match where AuthProvider is defined
 import { HomePage } from './pages/Home.page';
 import { CreateExperience } from './pages/CreateExperience.page';
 import { NoDataPullExperienceView } from './pages/NoDataPullExperienceView';
@@ -14,19 +14,19 @@ import { SingleExperiencePage } from './pages/SingleExperiencePage';
 import { AccountSettings } from './pages/AccountSettings';
 import { AccountSettingsHost } from './pages/AccountSettingsHost';
 import { ViewHostProfile } from './pages/ViewHostProfile';
-import { ViewUserProfile } from './pages/ViewUserProfile'; // Fix casing
+import { ViewUserProfile } from './pages/ViewUserProfile'; // Ensure proper casing
 import { ExperienceRegistration } from './pages/ExperienceRegistration.page';
 import { MessagesPage } from './pages/MessagesPage';
 
 // Ensure the user is passed properly using a wrapper component
 function ProtectedRoute({ Component }: { Component: React.FC<{ user: any }> }) {
-  const { user } = useContext(AuthContext); // Retrieve user from context
+  const auth = useContext(AuthContext); // Retrieve user from context
 
-  if (!user) {
+  if (!auth || !auth.user) {
     return <SignIn />; // Redirect to sign-in page if no user is found
   }
 
-  return <Component user={user} />;
+  return <Component user={auth.user} />;
 }
 
 // Define the router with the user-passing logic
