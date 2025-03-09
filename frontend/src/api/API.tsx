@@ -25,7 +25,8 @@ class Api {
   }
 
   static getSessionID(): string | undefined {
-    return this.instance.defaults.headers.common['X-Session-ID'];
+    const sessionId = this.instance.defaults.headers.common['X-Session-ID'];
+    return sessionId ? String(sessionId) : undefined; // Ensure type safety
   }
 
   static setProjectID(projectId: string) {
@@ -34,7 +35,8 @@ class Api {
   }
 
   static getProjectID(): string | undefined {
-    return this.instance.defaults.headers.common['Project-ID'];
+    const projectId = this.instance.defaults.headers.common['Project-ID'];
+    return projectId ? String(projectId) : undefined; // Ensure type safety
   }
 
   // **Centralized API Request Method**

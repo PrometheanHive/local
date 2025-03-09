@@ -4,9 +4,11 @@ import { useAuth } from '../auth/AuthProvider'; // Ensure this is correctly impo
 import { Loader, Center, Text } from '@mantine/core';
 
 export function MessagesPage() {
-    const { user } = useAuth(); // Get the authenticated user from your context
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const auth = useAuth(); // Get the authenticated user from context
+    const user = auth?.user || null; // Ensure user is properly handled
+
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!user) {
@@ -42,7 +44,7 @@ export function MessagesPage() {
     if (error) {
         return (
             <Center style={{ height: "100vh" }}>
-                <Text color="red">{error}</Text>
+                <Text c="red">{error}</Text>
             </Center>
         );
     }

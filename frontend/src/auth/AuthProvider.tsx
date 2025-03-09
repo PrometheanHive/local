@@ -1,37 +1,58 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Api, { API_BASE } from '../api/API';
 
-const AuthContext = createContext({});
+// Define the AuthContext type
+interface AuthContextType {
+  user: any;
+  setUser: React.Dispatch<React.SetStateAction<any>>;
+  isLoading: boolean;
+}
 
-export const useAuth = () => useContext(AuthContext);
+// Create the AuthContext with a default value
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+// Hook to use the AuthContext
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const response = await Api.instance.get(`${API_BASE}/general/user`, { withCredentials: true });
-                
-                if (response.data && response.data.username) {
-                    setUser(response.data); // Correctly sets the user if authenticated
-                } else {
-                    setUser(null); // Ensures guest users get `null`
-                }
-            } catch (error) {
-                console.error('Error fetching user data:', error);
-                setUser(null); // Ensures failed requests don't break navigation bar
-            }
-            setIsLoading(false);
-        };
+// Define Props for AuthProvider
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-        fetchUser();
-    }, []);
+// AuthProvider Component
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    return (
-        <AuthContext.Provider value={{ user, setUser, isLoading }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await Api.instance.get(`${API_BASE}/general/user`, { withCredentials: true });
+
+        if (response.data && response.data.username) {
+          setUser(response.data); // Correctly sets the user if authenticated
+        } else {
+          setUser(null); // Ensures guest users get `null`
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setUser(null); // Ensures failed requests don't break navigation bar
+      }
+      setIsLoading(false);
+    };
+
+    fetchUser();
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, setUser, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
