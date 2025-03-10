@@ -12,15 +12,11 @@ COPY . .
 # Build the frontend
 RUN npm run build
 
-# Use Nginx to serve frontend
-FROM nginx:latest
-WORKDIR /usr/share/nginx/html
+# Final stage: Store the build in the shared volume
+FROM alpine:latest
+WORKDIR /frontend
+# Ensure the built frontend is copied
+COPY --from=builder /frontend/dist /frontend/dist  
 
-# Copy built frontend files from the builder stage
-COPY --from=builder /frontend/dist /usr/share/nginx/html
-
-# Expose port 80
-EXPOSE 80
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+VOLUME /frontend/dist  # Mark this directory as a volume
+CMD ["sh", "-c", "echo 'Frontend built and ready' && sleep infinity"]

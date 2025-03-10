@@ -6,7 +6,7 @@ services:
       - ./data/db:/root/db
     environment:
       - SQLITE3_DB=db.sqlite3
-    command: /bin/sh -c "sqlite3 /root/db/db.sqlite3 '.databases' && exit 0"
+    command: /bin/sh "sqlite3 /root/db/db.sqlite3 '.databases' && exit 0"
 
   sqlite-web:
     container_name: sqlite_webview_locale
@@ -48,8 +48,14 @@ services:
     environment:
       - BACKEND_API_PORT=${BACKEND_API_PORT}
       - CHOKIDAR_USEPOLLING=true
+    #volumes:
+      #- ./frontend/dist:/usr/share/nginx/html:ro  # Mount the React build directory
     depends_on:
       - backend
+    networks:
+      - web_network
+    volumes:
+      - frontend_build:/frontend/dist
 
   nginx:
     image: nginx:latest
@@ -60,8 +66,12 @@ services:
     volumes:
       #- ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - frontend_build:/usr/share/nginx/html:ro  # Mount built frontend files from frontend container
     depends_on:
       - frontend
       - backend
+    networks:
+      - web_network
 
-
+volumes:
+  frontend_build
