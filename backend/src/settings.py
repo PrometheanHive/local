@@ -30,6 +30,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"  # Use environment variable
 
 # Ensure Django trusts AWS ALB for HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True  # Allow Django to use forwarded headers
 
 # Force HTTPS in production
 SECURE_SSL_REDIRECT = False  # Redirect all HTTP requests to HTTPS
@@ -44,8 +45,11 @@ ALLOWED_HOSTS = [
     "0.0.0.0",
     "127.0.0.1",
     "localhost",
-    "demo.experiencebylocals.com"  # Allow AWS ALB and frontend domain
+    "backend_locale",  # Ensure this matches the Docker service name
+    "nginx",  # If Nginx is forwarding requests
+    "demo.experiencebylocals.com"  # Ensure this includes your external domain
 ]
+
 
 
 
@@ -180,11 +184,11 @@ CORS_ALLOWED_ORIGINS = [
 
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 
-    'https://localhost',
-    'https://0.0.0.0',
-    'http://localhost',
-    'http://0.0.0.0',
+CSRF_TRUSTED_ORIGINS = [
+    "https://localhost",
+    "http://localhost",
+    "https://0.0.0.0",
+    "http://0.0.0.0",
     "https://demo.experiencebylocals.com"
 ]
 

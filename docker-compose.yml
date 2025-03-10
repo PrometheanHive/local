@@ -40,7 +40,7 @@ services:
     depends_on:
       - db
     environment:
-      - DJANGO_ALLOWED_HOSTS=demo.experiencebylocals.com localhost
+      - DJANGO_ALLOWED_HOSTS=demo.experiencebylocals.com localhost backend_locale nginx
       - DJANGO_CSRF_TRUSTED_ORIGINS=https://demo.experiencebylocals.com
     networks:
       - web_network
