@@ -1,23 +1,20 @@
-# syntax=docker/dockerfile:1
-
+# Use Python 3.11 as the base image
 FROM python:3.11.3
 
-#create backend folder if not present
-RUN mkdir -p /backend
+# Set the working directory inside the container
 WORKDIR /backend
 
-#ensure that python output is sent to terminal and not buffered
+# Copy only requirements file first (reduces unnecessary rebuilds)
+COPY ./requirements.txt ./
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the backend source code after installing dependencies
+COPY . .
+
+# Ensure Python output is unbuffered
 ENV PYTHONUNBUFFERED=1
 
-# Copy and install python requirements
-COPY ./requirements.txt ./
-RUN pip3 install -r requirements.txt
-
-
-# # Run Flask app
-# EXPOSE 5000
-# RUN cd src
-# #ENV FLASK_APP="./src/app.py" FLASK_ENV=docker FLASK_DEBUG=true
-# #CMD ["python3", "src/app.py"]
-# CMD ["flask", "--app", "src/app", "--debug", "run", "--host", "0.0.0.0"]
-# #CMD tail -f /dev/null
+# Run the Django application with Gunicorn
+CMD ["gunicorn", "--workers=4", "--threads=2", "--timeout", "120", "--bind", "0.0.0.0:5000", "src.wsgi:application"]

@@ -3,7 +3,7 @@ services:
     container_name: sqlite_locale
     image: nouchka/sqlite3:latest
     volumes: 
-      - ./data/db:/root/db
+      - ./data/db:/data
     environment:
       - SQLITE3_DB=db.sqlite3
     #command: /bin/sh "sqlite3 /root/db/db.sqlite3 '.databases' && exit 0"
@@ -31,7 +31,8 @@ services:
       dockerfile: Dockerfile
     command: gunicorn --workers=4 --threads=2 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application
     volumes: 
-      - ./backend:/backend
+      - ./backend:/backend:z  # Add ":z" to prevent permission issues
+      - /backend/__pycache__  # Avoid caching issues inside the container
     ports:
       - "5000:5000"
     cpus: "1.0"
@@ -40,6 +41,7 @@ services:
     depends_on:
       - db
     environment:
+      - DOCKER=true
       - DJANGO_ALLOWED_HOSTS=demo.experiencebylocals.com localhost backend_locale nginx
       - DJANGO_CSRF_TRUSTED_ORIGINS=https://demo.experiencebylocals.com
     networks:
