@@ -1,4 +1,4 @@
-from ninja import Router, Schema, ModelSchema
+from ninja import Router, Schema, File,  ModelSchema
 from django.contrib import auth
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
@@ -9,8 +9,6 @@ import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
-from django.http import JsonResponse
-from ninja import Router, File
 from ninja.files import UploadedFile
 
 router = Router()
@@ -19,10 +17,14 @@ UserModel = auth.get_user_model()
 UPLOAD_DIR = "/var/www/uploads/"  # Change this to your preferred EC2 storage path
 
 ###  FIX: Ensure all API responses explicitly allow credentials ###
+from django.http import JsonResponse
+
 def json_response(data, status=200):
-    response = JsonResponse(data, status=status)
-    response["Access-Control-Allow-Credentials"] = "true"
+    """Custom JSON response handler that supports lists and CORS credentials."""
+    response = JsonResponse(data, status=status, safe=isinstance(data, dict))  # Set `safe=False` for lists
+    response["Access-Control-Allow-Credentials"] = "true"  # Preserve CORS credentials
     return response
+
 
 # ============================
 # 🔹 AUTHENTICATION ENDPOINTS
@@ -96,6 +98,14 @@ def logout_user(request):
 
     return response
 
+@router.post("/user/create")
+def create_user(request, payload: Schema):
+    """Creates a new user account."""
+    if UserModel.objects.filter(username=payload.username).exists():
+        return json_response({"error": "Username already exists"}, status=400)
+    
+    user = UserModel.objects.create_user(username=payload.username, password=payload.password)
+    return json_response({"message": "User created successfully", "user_id": user.id})
 
 # ============================
 # 🔹 EVENTS & BOOKINGS
@@ -103,11 +113,12 @@ def logout_user(request):
 
 @router.get("/event/get_all", response=List[dict])
 def list_all_events(request):
-    """ FIX: Ensure API returns an empty array instead of `None` """
+    """ Ensure API always returns an array & handles NoneType safely."""
     events = models.Event.objects.all().select_related('host')
 
-    event_data = [
-        {
+    event_data = []
+    for event in events:
+        event_data.append({
             'id': event.id,
             'title': event.title,
             'description': event.description,
@@ -117,14 +128,13 @@ def list_all_events(request):
             'occurence_date': event.occurence_date,
             'location': event.location,
             'price': event.price,
-            'host_username': event.host.username,
-            'host_first_name': event.host.first_name,
-            'photos': event.photos or [],  # Fix: Prevents `NoneType` errors
-        }
-        for event in events
-    ]
+            'host_username': event.host.username if event.host else "Unknown",
+            'host_first_name': event.host.first_name if event.host else "Unknown",
+            'photos': event.photos if event.photos else [],
+        })
 
-    return json_response(event_data)  # Ensure API always returns an array
+    return json_response(event_data)  # Ensures `safe=False` for lists
+
 
 
 @router.get("/user/bookings")

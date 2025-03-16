@@ -90,7 +90,6 @@ INSTALLED_APPS = [
     'corsheaders',
 
     #my apps
-    'helloWorld.apps.HelloworldConfig',
     'general.apps.GeneralConfig'
 ]
 

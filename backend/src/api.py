@@ -1,7 +1,11 @@
 from ninja import NinjaAPI
-#from helloWorld.api import router as helloWorld_router
 from general.api import router as general_router
 
+# Create a SINGLE instance of NinjaAPI with a unique version
 api = NinjaAPI()
-#api.add_router("/helloWorld/", helloWorld_router)
+
+# Debugging: Print loaded routes
+print("Loaded API Routes:", api.urls)
+
+# Register API routers
 api.add_router("/general/", general_router)
