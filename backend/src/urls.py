@@ -22,7 +22,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     #hello world stuff
-    path('helloWorld/', include("helloWorld.urls")),
+    #path('helloWorld/', include("helloWorld.urls")),
 
     #api stuff - uses router to include from different apps
     path("api/", api.urls),

@@ -29,7 +29,7 @@ services:
     build:
       context: backend/.
       dockerfile: Dockerfile
-    command: gunicorn --workers=2 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application
+    command: gunicorn --workers=4 --threads=2 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application
     volumes: 
       - ./backend:/backend
     ports:
