@@ -32,7 +32,7 @@ services:
     command: gunicorn --workers=4 --threads=2 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application
     volumes: 
       - ./backend:/backend:z  # Add ":z" to prevent permission issues
-      - /backend/__pycache__  # Avoid caching issues inside the container
+      #- /backend/__pycache__  # Avoid caching issues inside the container
     ports:
       - "5000:5000"
     cpus: "1.0"
@@ -62,7 +62,7 @@ services:
     networks:
       - web_network
     volumes:
-      - frontend_build:/frontend/dist
+      - frontend_build:/frontend/dist:rw
 
   nginx:
     image: nginx:latest
