@@ -1,6 +1,6 @@
 import { Autocomplete, Group, Avatar, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconSearch } from '@tabler/icons-react'; // Ensure this package is installed
+//import { IconSearch } from '@tabler/icons-react'; // Ensure this package is installed
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthProvider';
 import classes from './NavigationBar.module.css'; // Ensure the correct CSS file name
