@@ -36,13 +36,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const response = await Api.instance.get(`${API_BASE}/general/user`, { withCredentials: true });
 
         if (response.data && response.data.username) {
-          setUser(response.data); // Correctly sets the user if authenticated
+          setUser(response.data); // Set user if authenticated
         } else {
-          setUser(null); // Ensures guest users get `null`
+          setUser(null);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-        setUser(null); // Ensures failed requests don't break navigation bar
+        setUser(null);
       }
       setIsLoading(false);
     };
@@ -50,8 +50,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     fetchUser();
   }, []);
 
+  // ✅ Logout function
+  const logout = async () => {
+    try {
+      await Api.instance.post(`${API_BASE}/general/user/logout`, {}, { withCredentials: true });
+
+      setUser(null); // Clear user state
+      window.location.href = "/"; // Redirect to home after logout
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, isLoading }}>
+    <AuthContext.Provider value={{ user, setUser, isLoading, logout }}>
       {children}
     </AuthContext.Provider>
   );

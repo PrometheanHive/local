@@ -12,10 +12,9 @@ interface User {
   image?: string;
 }
 
+
 export function NavigationBar() {
-  const [opened, { toggle }] = useDisclosure(false);
-  const auth = useAuth(); // Ensure context is not empty
-  const user: User | null = auth?.user ?? null; // Properly handle missing user
+  const { user, logout } = useAuth(); // Use logout from AuthProvider
 
   return (
     <header className={classes.header}>
@@ -26,35 +25,27 @@ export function NavigationBar() {
           </Link>
           {user && (
             <>
-              <Link style={{ textDecoration: 'none', color: 'black' }} to="/messages">
-                <Text fw={500} size="sm" lh={1} mr={3}>
-                  Messages
-                </Text>
+              <Link to="/messages">
+                <Text fw={500} size="sm" lh={1} mr={3}>Messages</Text>
               </Link>
-              <Link style={{ textDecoration: 'none', color: 'black' }} to="/create-experience">
-                <Text fw={500} size="sm" lh={1} mr={3}>
-                  Create Experience
-                </Text>
+              <Link to="/create-experience">
+                <Text fw={500} size="sm" lh={1} mr={3}>Create Experience</Text>
               </Link>
             </>
           )}
         </Group>
+
         <Group>
-          <Group ml={50} gap={5} className={classes.links}>
-            {user ? (
-              <Link style={{ textDecoration: 'none', color: 'black' }} to="/sign-in">
-                <Text fw={500} size="sm" lh={1} mr={3}>
-                  Welcome {user.username}
-                </Text>
-              </Link>
-            ) : (
-              <Link style={{ textDecoration: 'none', color: 'black' }} to="/sign-in">
-                <Text fw={500} size="sm" lh={1} mr={3}>
-                  Please sign in
-                </Text>
-              </Link>
-            )}
-          </Group>
+          {user ? (
+            <Group>
+              <Text fw={500} size="sm" mr={10}>Welcome, {user.username}</Text>
+              <Button onClick={logout} color="red" size="sm">Logout</Button>
+            </Group>
+          ) : (
+            <Link to="/sign-in">
+              <Text fw={500} size="sm">Sign In</Text>
+            </Link>
+          )}
         </Group>
       </div>
     </header>
