@@ -21,10 +21,12 @@ def json_response(data, status=200):
     return response
 
 
-### Define API Schemas with Validation
 class UserCreateSchema(Schema):
-    username: constr(min_length=3, max_length=150)  # Ensure valid username
-    password: constr(min_length=6)  # Minimum password length for security
+    username: constr(min_length=3, max_length=150)
+    password: constr(min_length=6)
+    first_name: str
+    last_name: str
+    email: str
 
 
 class UserAuthSchema(Schema):
@@ -86,11 +88,16 @@ def get_user(request):
 
 @router.post("/user/create")
 def create_user(request, payload: UserCreateSchema):
-    """Creates a new user account."""
     if UserModel.objects.filter(username=payload.username).exists():
         return json_response({"error": "Username already exists"}, status=400)
-    
-    user = UserModel.objects.create_user(username=payload.username, password=payload.password)  # Ensures password is hashed
+
+    user = UserModel.objects.create_user(
+        username=payload.username,
+        password=payload.password,
+        email=payload.email,
+        first_name=payload.first_name,
+        last_name=payload.last_name
+    )
     return json_response({"message": "User created successfully", "user_id": user.id})
 
 
