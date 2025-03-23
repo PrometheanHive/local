@@ -10,6 +10,9 @@
     ```
 - run any django migrations to fix the database using
     ```
+    python3 manage.py makemigrations
+    python3 manage.py migrate
+
     sudo docker compose run backend python3.11 manage.py migrate
     ```
 

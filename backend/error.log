@@ -1,0 +1,151 @@
+In order to allow non-dict objects to be serialized set the safe parameter to False.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 127, in list_all_events
+    return json_response(event_data)  # Ensure API always returns an array
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 23, in json_response
+    response = JsonResponse(data, status=status)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/http/response.py", line 726, in __init__
+    raise TypeError(
+TypeError: In order to allow non-dict objects to be serialized set the safe parameter to False.
+Internal Server Error: /api/general/event/get_all
+json_response() got an unexpected keyword argument 'safe'
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 133, in list_all_events
+    return json_response(event_data, safe=False)  # Fix `safe=False` to allow lists
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: json_response() got an unexpected keyword argument 'safe'
+Internal Server Error: /api/general/event/get_all
+json_response() got an unexpected keyword argument 'safe'
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 133, in list_all_events
+    return json_response(event_data, safe=False)  # Fix `safe=False` to allow lists
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: json_response() got an unexpected keyword argument 'safe'
+Internal Server Error: /api/general/event/get_all
+Invalid HTTP_HOST header: '3.136.164.5:5000'. You may need to add '3.136.164.5' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/utils/deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/http/request.py", line 151, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '3.136.164.5:5000'. You may need to add '3.136.164.5' to ALLOWED_HOSTS.
+Invalid HTTP_HOST header: '3.136.164.5:5000'. You may need to add '3.136.164.5' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/utils/deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/http/request.py", line 151, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '3.136.164.5:5000'. You may need to add '3.136.164.5' to ALLOWED_HOSTS.
+Invalid HTTP_HOST header: '3.136.164.5'. You may need to add '3.136.164.5' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/utils/deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/http/request.py", line 151, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '3.136.164.5'. You may need to add '3.136.164.5' to ALLOWED_HOSTS.
+Invalid HTTP_HOST header: '3.136.164.5'. You may need to add '3.136.164.5' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/utils/deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/django/http/request.py", line 151, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '3.136.164.5'. You may need to add '3.136.164.5' to ALLOWED_HOSTS.
+'Schema' object has no attribute 'username'
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 69, in authenticate_user
+    user = authenticate(username=payload.username, password=payload.password)
+                                 ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 891, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'Schema' object has no attribute 'username'
+Internal Server Error: /api/general/user/authenticate
+'Schema' object has no attribute 'username'
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 104, in create_user
+    if UserModel.objects.filter(username=payload.username).exists():
+                                         ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 891, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'Schema' object has no attribute 'username'
+Internal Server Error: /api/general/user/create
+'Schema' object has no attribute 'username'
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 104, in create_user
+    if UserModel.objects.filter(username=payload.username).exists():
+                                         ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 891, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'Schema' object has no attribute 'username'
+Internal Server Error: /api/general/user/create
+'Schema' object has no attribute 'username'
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 104, in create_user
+    if UserModel.objects.filter(username=payload.username).exists():
+                                         ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 891, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'Schema' object has no attribute 'username'
+Internal Server Error: /api/general/user/create
+'Schema' object has no attribute 'username'
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 104, in create_user
+    if UserModel.objects.filter(username=payload.username).exists():
+                                         ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/pydantic/main.py", line 891, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'Schema' object has no attribute 'username'
+Internal Server Error: /api/general/user/create

@@ -1,7 +1,8 @@
 from ninja import NinjaAPI
-from helloWorld.api import router as helloWorld_router
 from general.api import router as general_router
 
-api = NinjaAPI()
-api.add_router("/helloWorld/", helloWorld_router)
+# Create API instance
+api = NinjaAPI(version="1.1.0")
+
+# Register API routers
 api.add_router("/general/", general_router)

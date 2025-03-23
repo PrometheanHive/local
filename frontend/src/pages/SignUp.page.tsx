@@ -1,46 +1,58 @@
 import React, { useState } from 'react';
-import { DateTimePicker } from '@mantine/dates';
-import { useForm } from '@mantine/form';
-import { Container, Paper, Title, Text, getContrastColor, TextInput, PasswordInput, Button, RadioGroup, Radio  } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
+import { Container, Paper, Title, Text, TextInput, PasswordInput, Button, RadioGroup, Radio } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
 import { Link } from 'react-router-dom';
-import { useNavigate } from "react-router-dom";
-import { CometChat } from "@cometchat/chat-sdk-javascript";//import sdk package
-import { CometChatUIKit } from "@cometchat/chat-uikit-react";//import uikit package
-
+import { CometChat } from "@cometchat/chat-sdk-javascript"; // Import SDK package
+import { CometChatUIKit } from "@cometchat/chat-uikit-react"; // Import UI Kit package
 
 export function SignUp() {
-
-    const [email, setEmail] = useState("");
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [password, setPassword] = useState("");
-    const [role, setRole] = useState('');
+    const [email, setEmail] = useState<string>("");
+    const [firstName, setFirstName] = useState<string>("");
+    const [lastName, setLastName] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [role, setRole] = useState<string>("");
+    
     const navigate = useNavigate();
-    const handleSubmit = async (event) => {
-        //Stop browser refresh on submit for debugging
-        event.preventDefault()
-        const values = {email: email, username:email, first_name:firstName, last_name:lastName, password: password}
-        const response = await Api.instance.post(`${API_BASE}/general/user/create`, values);
-        const cometChatLogin = email.replace(/[@.]/g, '');
-        var user = new CometChat.User(cometChatLogin);
-        user.setName(`${firstName} ${lastName}`);
-        CometChatUIKit.createUser(user).then((user:CometChat.User) => {
-            console.log("user created", user);
-            CometChatUIKit.login(cometChatLogin).then((user:CometChat.User) => {
-               console.log("Login Successful:", { user });
-            }).catch(console.log);
-        }).catch(console.log);
-        navigate("/sign-in");
-    }
 
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+
+        const values = { 
+            email: email, 
+            username: email, 
+            first_name: firstName, 
+            last_name: lastName, 
+            password: password 
+        };
+
+        try {
+            await Api.instance.post(`${API_BASE}/general/user/create`, values);
+
+            const cometChatLogin = email.replace(/[@.]/g, '');
+            const user = new CometChat.User(cometChatLogin);
+            user.setName(`${firstName} ${lastName}`);
+
+            CometChatUIKit.createUser(user)
+                .then(() => {
+                    CometChatUIKit.login(cometChatLogin)
+                        .then((loggedInUser) => {
+                            console.log("Login Successful:", { loggedInUser });
+                            navigate("/sign-in");
+                        })
+                        .catch(console.error);
+                })
+                .catch(console.error);
+        } catch (error) {
+            console.error("User creation failed:", error);
+        }
+    };
 
     return (
-
         <Container my={40}>
-            <Paper padding="md">
-                <Title order={2} align="center" mb="lg">Sign Up</Title>
-                <Text align="center" size="sm" mb="lg"> Please enter your information to sign up.</Text>
+            <Paper p="md">
+                <Title order={2} mb="lg">Sign Up</Title>
+                <Text size="sm" mb="lg">Please enter your information to sign up.</Text>
                 <form onSubmit={handleSubmit}>
                     <Container style={{ textAlign: 'center' }}>
                         <TextInput
@@ -88,7 +100,7 @@ export function SignUp() {
                             value={role}
                             onChange={setRole}
                             required
-                            style={{ justifyContent: 'center', display: 'flex', flexDirection: 'row', gap: '20px' }} // Adjust styling as necessary
+                            style={{ justifyContent: 'center', display: 'flex', flexDirection: 'row', gap: '20px' }}
                         >
                             <Radio value="traveler" label="Traveler" />
                             <Radio value="host" label="Host" />
@@ -99,9 +111,9 @@ export function SignUp() {
                         <Button type="submit" variant="filled" color="blue" style={{ width: "150px" }}>
                             Sign Up
                         </Button>
-                        <div>
+                        <Text size="sm" mt="sm">
                             Already have an account? <Link to="/sign-in">Log In</Link>
-                        </div>
+                        </Text>
                     </Container>
                 </form>
             </Paper>

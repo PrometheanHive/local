@@ -1,62 +1,70 @@
 import React, { useState } from 'react';
-import { DateTimePicker } from '@mantine/dates';
-import { Container, Paper, Title, Text, getContrastColor, TextInput, Card, Button, Divider, Stack } from '@mantine/core';
+import { Container, Paper, Title, Text, TextInput, Card, Button, Divider, Stack } from '@mantine/core';
 
 export function AccountSettingsHost() {
-    const user = {
-        name: "Johnny Doe",
-        email: "jdoe@gmail.com",
-        earnings: "$1000"
-    };
-    const [name, setName] = useState(user.name);
-    const [email, setEmail] = useState(user.email);
-    const [earnings, setEarnings] = useState(user.earnings);
-    return (
-   <Container my={40}>
-        <Paper padding = "md">
-        <Title order = {1} align = "center" mb = "lg">Account Management</Title>
+  const user = {
+    name: "Johnny Doe",
+    email: "jdoe@gmail.com",
+    earnings: "$1000"
+  };
+
+  const [name, setName] = useState<string>(user.name);
+  const [email, setEmail] = useState<string>(user.email);
+  const [earnings] = useState<string>(user.earnings);
+
+  return (
+    <Container my={40}>
+      <Paper p="md">
+        <Title order={1} mb="lg">Account Management</Title>
+
+        {/* Account Details */}
         <Card shadow="sm" p="lg">
-            <Stack spacing="sm">
-                <Title order={2}>Account details</Title>
-                <Text size="lg" weight={500} style={{ fontFamily: 'Arial, sans-serif' }}><span style={{ fontWeight: "700" }}>Name:</span> {<TextInput 
-                placeholder= "Name"
-                value= {name}
-                onChange = {(event) => setName(event.target.value)}
-                style = {{width: "500px", display: 'inline-block',  textAlign: 'left'} }
+          <Stack gap="sm">
+            <Title order={2}>Account details</Title>
+            <Stack>
+              <TextInput
+                label="Name"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
                 required
-                />}
-                </Text>
-                <Text size="lg" weight={500} style={{ fontFamily: 'Arial, sans-serif' }}><span style={{ fontWeight: "700" }}>Email:</span> {<TextInput 
-                placeholder= "Name"
-                value= {email}
-                onChange = {(event) => setEmail(event.target.value)}
-                style = {{width: "500px", display: 'inline-block',  textAlign: 'left'} }
+              />
+              <TextInput
+                label="Email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 required
-                />}</Text>
-                <Button type="submit" variant="filled" color="black" style={{width:"150px"}}>
-                    Update
-                </Button>
-              </Stack>
-        </Card>
-        <Divider />
-        <Card shadow="sm">
-        <Stack spacing="sm">
-            <Title order={2}>Earnings summary</Title>
-            <Text size="lg" weight={500} style={{ fontFamily: 'Arial, sans-serif' }}>
-                <span style={{ fontWeight: "700", marginLeft: '5px' }}>Earnings this month:</span> {earnings}
-            </Text>
+              />
             </Stack>
-        </Card>
-        <Divider />
-        <Card shadow="sm">
-        <Stack spacing="sm">
-            <Title order={2}>Create an event</Title>
-            <Button type="submit" variant="filled" color="black" style={{width:"200px"}}>
-                New event
+            <Button type="submit" variant="filled" color="black" style={{ width: "150px" }}>
+              Update
             </Button>
-        </Stack>
+          </Stack>
         </Card>
-        </Paper>
+
+        <Divider my="lg" />
+
+        {/* Earnings Summary */}
+        <Card shadow="sm">
+          <Stack gap="sm">
+            <Title order={2}>Earnings Summary</Title>
+            <Text size="lg"><strong>Earnings this month:</strong> {earnings}</Text>
+          </Stack>
+        </Card>
+
+        <Divider my="lg" />
+
+        {/* Create an Event */}
+        <Card shadow="sm">
+          <Stack gap="sm">
+            <Title order={2}>Create an Event</Title>
+            <Button type="submit" variant="filled" color="black" style={{ width: "200px" }}>
+              New Event
+            </Button>
+          </Stack>
+        </Card>
+      </Paper>
     </Container>
-   );
+  );
 }
