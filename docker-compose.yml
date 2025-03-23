@@ -29,10 +29,11 @@ services:
     build:
       context: backend/.
       dockerfile: Dockerfile
-    command: gunicorn --workers=4 --threads=2 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application
+    command: sh -c "python manage.py collectstatic --noinput && gunicorn --workers=4 --threads=2 --timeout 120 --bind 0.0.0.0:5000 src.wsgi:application"
     volumes: 
       - ./backend:/backend:z  # Add ":z" to prevent permission issues
       - /backend/__pycache__  # Avoid caching issues inside the container
+      - backend_static:/backend/static
     ports:
       - "5000:5000"
     cpus: "1.0"
@@ -74,6 +75,7 @@ services:
       #- ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - frontend_build:/usr/share/nginx/html:ro  # Mount built frontend files from frontend container
+      - backend_static:/backend/static:ro
     depends_on:
       - frontend
       - backend
@@ -85,4 +87,5 @@ networks:
     driver: bridge
 
 volumes:
+  backend_static:
   frontend_build:
