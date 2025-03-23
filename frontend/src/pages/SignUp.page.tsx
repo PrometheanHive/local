@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Paper, Title, Text, TextInput, PasswordInput, Button, RadioGroup, Radio } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
 import { Link } from 'react-router-dom';
-import { CometChat } from "@cometchat/chat-sdk-javascript"; // Import SDK package
-import { CometChatUIKit } from "@cometchat/chat-uikit-react"; // Import UI Kit package
+//import { CometChat } from "@cometchat/chat-sdk-javascript"; // Import SDK package
+//import { CometChatUIKit } from "@cometchat/chat-uikit-react"; // Import UI Kit package
 
 export function SignUp() {
     const [email, setEmail] = useState<string>("");
@@ -29,20 +29,20 @@ export function SignUp() {
         try {
             await Api.instance.post(`${API_BASE}/general/user/create`, values);
 
-            const cometChatLogin = email.replace(/[@.]/g, '');
-            const user = new CometChat.User(cometChatLogin);
-            user.setName(`${firstName} ${lastName}`);
+            //const cometChatLogin = email.replace(/[@.]/g, '');
+            //const user = new CometChat.User(cometChatLogin);
+            //user.setName(`${firstName} ${lastName}`);
 
-            CometChatUIKit.createUser(user)
-                .then(() => {
-                    CometChatUIKit.login(cometChatLogin)
-                        .then((loggedInUser) => {
-                            console.log("Login Successful:", { loggedInUser });
-                            navigate("/sign-in");
-                        })
-                        .catch(console.error);
-                })
-                .catch(console.error);
+            //CometChatUIKit.createUser(user)
+            //    .then(() => {
+            //        CometChatUIKit.login(cometChatLogin)
+            //            .then((loggedInUser) => {
+            //                console.log("Login Successful:", { loggedInUser });
+            //                navigate("/sign-in");
+            //            })
+            //            .catch(console.error);
+            //    })
+            //   .catch(console.error);
         } catch (error) {
             console.error("User creation failed:", error);
         }

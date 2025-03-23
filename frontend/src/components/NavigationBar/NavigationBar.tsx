@@ -26,11 +26,11 @@ export function NavigationBar() {
           </Link>
           {user && (
             <>
-              <Link style={{ textDecoration: 'none', color: 'black' }} to="/messages">
+              {/* <Link style={{ textDecoration: 'none', color: 'black' }} to="/messages">
                 <Text fw={500} size="sm" lh={1} mr={3}>
                   Messages
                 </Text>
-              </Link>
+              </Link> */}
               <Link style={{ textDecoration: 'none', color: 'black' }} to="/create-experience">
                 <Text fw={500} size="sm" lh={1} mr={3}>
                   Create Experience

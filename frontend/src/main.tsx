@@ -1,7 +1,7 @@
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
-import { CometChatUIKit, UIKitSettingsBuilder } from "@cometchat/chat-uikit-react";
+//import { CometChatUIKit, UIKitSettingsBuilder } from "@cometchat/chat-uikit-react";
 
 // Define CometChat Constants
 const COMETCHAT_CONSTANTS = {

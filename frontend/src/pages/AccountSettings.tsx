@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Paper, Title, Text, Card, Button, Divider, Stack } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
-import { CometChatUIKit } from "@cometchat/chat-uikit-react";
+//import { CometChatUIKit } from "@cometchat/chat-uikit-react";
 import { useNavigate } from 'react-router-dom';
 
 interface User {
@@ -50,7 +50,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   const handleLogout = async () => {
     try {
       await Api.instance.post(`${API_BASE}/general/user/logout`, {}, { withCredentials: true });
-      await CometChatUIKit.logout();
+      //await CometChatUIKit.logout();
       console.log("Logout successful");
 
       window.location.href = '/'; // Refresh and redirect to homepage
