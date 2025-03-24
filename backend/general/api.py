@@ -1,13 +1,15 @@
 import os
-from typing import List
+from typing import List, Optional
 from django.contrib import auth
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.http import JsonResponse
 from django.conf import settings
 from ninja import Router, Schema, File
 from ninja.files import UploadedFile
 from pydantic import constr
 from .models import Event, Booking
+from ninja.errors import HttpError
+from datetime import datetime
 
 router = Router()
 UserModel = auth.get_user_model()
@@ -49,6 +51,23 @@ class BookingSchema(Schema):
     event_id: int
     event_title: str
     event_date: str
+
+
+class EventCreateSchema(Schema):
+    title: str
+    description: str
+    unique_aspect: str
+    occurence_date: str  # Expecting ISO string
+    location: str
+    price: float
+    number_of_guests: int
+    number_of_bookings: int
+    photos: List[str] = []
+
+class EventCreateResponse(Schema):
+    message: str
+    event_id: int
+
 
 
 ### File Upload API
@@ -175,3 +194,26 @@ def list_all_events(request):
             price=float(event.price)
         ) for event in events
     ]
+
+@router.post("/event/create", response=EventCreateResponse)
+def create_event(request, payload: EventCreateSchema):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Authentication required")
+
+    try:
+        event = Event.objects.create(
+            title=payload.title,
+            description=payload.description,
+            unique_aspect=payload.unique_aspect,
+            occurence_date=datetime.fromisoformat(payload.occurence_date),
+            location=payload.location,
+            price=payload.price,
+            number_of_guests=payload.number_of_guests,
+            number_of_bookings=payload.number_of_bookings,
+            photos=payload.photos,
+            host=request.user
+        )
+    except Exception as e:
+        raise HttpError(400, f"Failed to create event: {str(e)}")
+
+    return {"message": "Event created", "event_id": event.id}
