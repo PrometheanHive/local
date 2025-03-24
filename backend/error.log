@@ -247,3 +247,13 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.11/site-packages/django/http/request.py", line 151, in get_host
     raise DisallowedHost(msg)
 django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '3.136.164.5:5000'. You may need to add '3.136.164.5' to ALLOWED_HOSTS.
+name 'get_object_or_404' is not defined
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 227, in get_experience
+    event = get_object_or_404(models.Event, id=event_id)
+            ^^^^^^^^^^^^^^^^^
+NameError: name 'get_object_or_404' is not defined
+Internal Server Error: /api/general/event/id/3
