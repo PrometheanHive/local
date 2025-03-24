@@ -10,6 +10,8 @@ from pydantic import constr
 from .models import Event, Booking
 from ninja.errors import HttpError
 from datetime import datetime
+from . import models
+
 
 router = Router()
 UserModel = auth.get_user_model()
@@ -70,6 +72,9 @@ class EventCreateResponse(Schema):
     message: str
     event_id: int
 
+class ReviewSchema(Schema):
+    text: str
+    rating: int
 
 
 ### File Upload API
@@ -244,56 +249,54 @@ def get_event_by_id(request, event_id: int):
 #  #Reviews 
 from .models import Review
 
-@router.get("/event/{event_id}/reviews")
-def get_event_reviews(request, event_id: int):
-    reviews = Review.objects.filter(event__id=event_id)
-    return json_response([
-        {"text": review.text, "rating": review.rating}
-        for review in reviews
-    ])
+@router.get("/event/{event_id}/reviews", response=List[ReviewSchema])
+def list_reviews_for_event(request, event_id: int):
+    try:
+        event = models.Event.objects.get(id=event_id)
+    except models.Event.DoesNotExist:
+        raise HttpError(404, "Event not found")
+
+    return [
+        ReviewSchema(text=review.text, rating=review.rating)
+        for review in event.reviews.all()
+    ]
 
 
-# @router.get("/event/{event_id}/reviews", response=List[ReviewSchema])
-# def list_reviews_for_event(request, event_id: int):
-#     event = get_object_or_404(models.Event, id=event_id)
-#     reviews = event.reviews.all()  # Using the related_name 'reviews' defined in the Review model
-#     return reviews 
+@router.post("/booking/register/{event_id}")
+def register_booking(request, event_id: int):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Not authenticated"}, status=401)
 
-# @router.post("/booking/register/{event_id}", auth=django_auth)
-# def register_booking(request, event_id: int):
-#     if request.user.is_authenticated:
-#         print(request.user.id)
-#         print(event_id)
-#         event = get_object_or_404(models.Event, id=event_id)
-#         guest = request.user
-#         if not models.Booking.objects.filter(event=event, guest=guest).exists():
-#             booking = models.Booking.objects.create(
-#                 event=event,
-#                 guest=guest
-#             )
-#             print(booking)
-#             event.number_of_bookings += 1
-#             event.save()
-#             return {"id": booking.id, "message": "booking created successfully"}
-#         booking =  get_object_or_404(models.Booking, event=event, guest=guest)
-#         return {"id": booking.id, "message": "booking already made"}
-#     else: 
-#         return JsonResponse({"error": "Not authenticated"}, status=401)
+    try:
+        event = models.Event.objects.get(id=event_id)
+    except models.Event.DoesNotExist:
+        raise HttpError(404, "Event not found")
+
+    guest = request.user
+    booking, created = models.Booking.objects.get_or_create(event=event, guest=guest)
+
+    if created:
+        event.number_of_bookings += 1
+        event.save()
+        return {"id": booking.id, "message": "Booking created successfully"}
+
+    return {"id": booking.id, "message": "Booking already exists"}
 
 
-# #Get bookings 
-# @router.get("/user/bookings", auth=django_auth)
-# def get_user_bookings(request):
-#     if request.user.is_authenticated:
-#         bookings = models.Booking.objects.filter(guest=request.user).select_related('event')
-#         booking_data = [
-#             {
-#                 'id': booking.id,
-#                 'event_id': booking.event.id,
-#                 'event_title': booking.event.title,
-#                 'event_date': booking.event.occurence_date
-#             } for booking in bookings
-#         ]
-#         return booking_data
-#     else:
-#         return JsonResponse({"error": "Not authenticated"}, status=401)
+
+@router.get("/user/bookings", response=List[BookingSchema])
+def get_user_bookings(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Not authenticated"}, status=401)
+
+    bookings = models.Booking.objects.filter(guest=request.user).select_related('event')
+
+    return [
+        BookingSchema(
+            id=booking.id,
+            event_id=booking.event.id,
+            event_title=booking.event.title,
+            event_date=str(booking.event.occurence_date)
+        )
+        for booking in bookings
+    ]

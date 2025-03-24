@@ -257,3 +257,75 @@ Traceback (most recent call last):
             ^^^^^^^^^^^^^^^^^
 NameError: name 'get_object_or_404' is not defined
 Internal Server Error: /api/general/event/id/3
+name 'models' is not defined
+Traceback (most recent call last):
+  File "/backend/general/api.py", line 253, in list_reviews_for_event
+    event = models.Event.objects.get(id=event_id)
+            ^^^^^^
+NameError: name 'models' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 254, in list_reviews_for_event
+    except models.Event.DoesNotExist:
+           ^^^^^^
+NameError: name 'models' is not defined
+Internal Server Error: /api/general/event/3/reviews
+name 'models' is not defined
+Traceback (most recent call last):
+  File "/backend/general/api.py", line 253, in list_reviews_for_event
+    event = models.Event.objects.get(id=event_id)
+            ^^^^^^
+NameError: name 'models' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 254, in list_reviews_for_event
+    except models.Event.DoesNotExist:
+           ^^^^^^
+NameError: name 'models' is not defined
+Internal Server Error: /api/general/event/3/reviews
+name 'models' is not defined
+Traceback (most recent call last):
+  File "/backend/general/api.py", line 253, in list_reviews_for_event
+    event = models.Event.objects.get(id=event_id)
+            ^^^^^^
+NameError: name 'models' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 254, in list_reviews_for_event
+    except models.Event.DoesNotExist:
+           ^^^^^^
+NameError: name 'models' is not defined
+Internal Server Error: /api/general/event/4/reviews
+name 'models' is not defined
+Traceback (most recent call last):
+  File "/backend/general/api.py", line 253, in list_reviews_for_event
+    event = models.Event.objects.get(id=event_id)
+            ^^^^^^
+NameError: name 'models' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 254, in list_reviews_for_event
+    except models.Event.DoesNotExist:
+           ^^^^^^
+NameError: name 'models' is not defined
+Internal Server Error: /api/general/event/3/reviews
