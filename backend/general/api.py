@@ -76,6 +76,12 @@ class ReviewSchema(Schema):
     text: str
     rating: int
 
+class ReviewCreateSchema(Schema):
+    event_id: int
+    text: str
+    rating: int
+
+
 
 ### File Upload API
 @router.post("/upload")
@@ -300,3 +306,27 @@ def get_user_bookings(request):
         )
         for booking in bookings
     ]
+
+@router.post("/reviews/create")
+def create_review(request, payload: ReviewCreateSchema):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Not authenticated"}, status=401)
+
+    try:
+        event = models.Event.objects.get(id=payload.event_id)
+    except models.Event.DoesNotExist:
+        raise HttpError(404, "Event not found")
+
+    if not (1 <= payload.rating <= 5):
+        raise HttpError(400, "Rating must be between 1 and 5")
+
+    review = models.Review.objects.create(
+        event=event,
+        text=payload.text,
+        rating=payload.rating
+    )
+
+    return json_response({
+        "message": "Review created successfully",
+        "review_id": review.id
+    })
