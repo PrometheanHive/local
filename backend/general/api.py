@@ -14,7 +14,8 @@ from datetime import datetime
 router = Router()
 UserModel = auth.get_user_model()
 
-UPLOAD_DIR = "/var/www/uploads/"  # Adjust as needed
+UPLOAD_DIR = settings.MEDIA_ROOT  # instead of "/var/www/uploads/"
+  # Adjust as needed
 
 ### Custom JSON Response Handler
 def json_response(data, status=200):
@@ -44,6 +45,7 @@ class EventSchema(Schema):
     occurence_date: str
     location: str
     price: float
+    photos: List[str] = []
 
 
 class BookingSchema(Schema):
@@ -184,16 +186,18 @@ def list_all_events(request):
         return json_response([])  # Return empty list if no events
 
     return [
-        EventSchema(
-            id=event.id,
-            title=event.title,
-            description=event.description,
-            unique_aspect=event.unique_aspect,
-            occurence_date=str(event.occurence_date),
-            location=event.location or "",
-            price=float(event.price)
-        ) for event in events
-    ]
+    EventSchema(
+        id=event.id,
+        title=event.title,
+        description=event.description,
+        unique_aspect=event.unique_aspect,
+        occurence_date=str(event.occurence_date),
+        location=event.location or "",
+        price=float(event.price),
+        photos=event.photos or [] 
+    ) for event in events
+]
+
 
 @router.post("/event/create", response=EventCreateResponse)
 def create_event(request, payload: EventCreateSchema):

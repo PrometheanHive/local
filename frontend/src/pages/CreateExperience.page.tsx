@@ -86,7 +86,15 @@ export function CreateExperience() {
             </Grid.Col>
             <Grid.Col span={6}>
               <NumberInput required label="Experience Price" {...form.getInputProps('price')} />
-              <FileInput required label="Experience Pictures" onChange={(files) => handleFileChange(files as File[])} multiple accept="image/png,image/jpeg" />
+              <fieldset style={{ border: "none", padding: 0, margin: 0 }}>
+                <legend style={{ fontSize: '0.875rem', marginBottom: '4px' }}>Experience Pictures</legend>
+                <FileInput
+                  required
+                  onChange={(files) => handleFileChange(files as File[])}
+                  multiple
+                  accept="image/png,image/jpeg"
+                />
+              </fieldset>
               <DateTimePicker required label="Experience Date" {...form.getInputProps('occurence_date')} placeholder="Pick a date" />
               <TextInput required label="Experience Location" {...form.getInputProps('location')} />
               <Group justify="space-between" mt="md">

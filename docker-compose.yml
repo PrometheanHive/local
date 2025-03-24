@@ -34,6 +34,7 @@ services:
       - ./backend:/backend:z  # Add ":z" to prevent permission issues
       - /backend/__pycache__  # Avoid caching issues inside the container
       - backend_static:/backend/static
+      - /mnt/volume/uploads/:/mnt/volume/uploads/
     ports:
       - "5000:5000"
     cpus: "1.0"
@@ -76,6 +77,7 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - frontend_build:/usr/share/nginx/html:ro  # Mount built frontend files from frontend container
       - backend_static:/backend/static:ro
+      - /mnt/volume/uploads/:/mnt/volume/uploads/:ro 
     depends_on:
       - frontend
       - backend
