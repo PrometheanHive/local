@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Paper, Title, Text, TextInput, PasswordInput, Button, RadioGroup, Radio } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthProvider';
+
 //import { CometChat } from "@cometchat/chat-sdk-javascript"; // Import SDK package
 //import { CometChatUIKit } from "@cometchat/chat-uikit-react"; // Import UI Kit package
 
@@ -14,10 +16,13 @@ export function SignUp() {
     const [role, setRole] = useState<string>("");
     
     const navigate = useNavigate();
+    const auth = useAuth();
+    const setUser = auth?.setUser || (() => {});
+
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-
+    
         const values = { 
             email: email, 
             username: email, 
@@ -25,28 +30,40 @@ export function SignUp() {
             last_name: lastName, 
             password: password 
         };
-
+    
         try {
-            await Api.instance.post(`${API_BASE}/general/user/create`, values);
-
-            //const cometChatLogin = email.replace(/[@.]/g, '');
-            //const user = new CometChat.User(cometChatLogin);
-            //user.setName(`${firstName} ${lastName}`);
-
-            //CometChatUIKit.createUser(user)
-            //    .then(() => {
-            //        CometChatUIKit.login(cometChatLogin)
-            //            .then((loggedInUser) => {
-            //                console.log("Login Successful:", { loggedInUser });
-            //                navigate("/sign-in");
-            //            })
-            //            .catch(console.error);
-            //    })
-            //   .catch(console.error);
+            // Create user
+            await Api.instance.post(`${API_BASE}/general/user/create`, values, {
+                withCredentials: true
+            });
+    
+            // Login user immediately after
+            const loginResponse = await Api.instance.post(`${API_BASE}/general/user/authenticate`, {
+                username: email,
+                password: password
+            }, {
+                withCredentials: true
+            });
+    
+            if (loginResponse.data && loginResponse.data.user_id) {
+                setUser(loginResponse.data.user_id);
+                // const cometChatLogin = email.replace(/[@.]/g, '');
+                // const user = new CometChat.User(cometChatLogin);
+                // user.setName(`${firstName} ${lastName}`);
+    
+                // await CometChatUIKit.createUser(user).catch(console.warn); // tolerate if already exists
+    
+                // await CometChatUIKit.login(cometChatLogin);
+    
+                // 🎯 Redirect to homepage
+                window.location.href = '/';
+            }
+    
         } catch (error) {
-            console.error("User creation failed:", error);
+            console.error("Signup or login failed:", error);
         }
     };
+    
 
     return (
         <Container my={40}>
