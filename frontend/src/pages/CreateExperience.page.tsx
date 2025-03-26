@@ -19,6 +19,7 @@ export function CreateExperience() {
       occurence_date: '',
       location: '',
       photos: null as File[] | null,
+      passphrase: '',
     },
   });
 
@@ -49,6 +50,10 @@ export function CreateExperience() {
 
   const handleSubmit = async (values: typeof form.values) => {
     console.log("Submitting experience with images:", fileUrls);
+    if (values.passphrase !== "iamahost") {
+      alert("Incorrect host code phrase. Please contact support.");
+      return;
+    }
 
     const updatedFormValues = {
       ...values,
@@ -60,7 +65,7 @@ export function CreateExperience() {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
-
+  
       console.log("Experience created:", response);
       navigate("/");
     } catch (error) {
@@ -97,6 +102,13 @@ export function CreateExperience() {
               </fieldset>
               <DateTimePicker required label="Experience Date" {...form.getInputProps('occurence_date')} placeholder="Pick a date" />
               <TextInput required label="Experience Location" {...form.getInputProps('location')} />
+              <TextInput
+                required
+                label="Enter Host Code Phrase"
+                placeholder="Enter code to post"
+                {...form.getInputProps('passphrase')}
+                style={{ marginTop: 20, width: "100%" }}
+              />
               <Group justify="space-between" mt="md">
                 <Button type="submit">Post Experience</Button>
               </Group>
