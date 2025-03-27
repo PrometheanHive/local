@@ -58,9 +58,9 @@ export function LandingPage() {
                         title={card.title}
                         description={card.description}
                         imageUrl={card.photos?.[0] ?? ""}
-                        available={
+                        available={Math.max( 0,
                           (card.number_of_guests ?? 2) -
-                          (card.number_of_bookings ?? 0)
+                          (card.number_of_bookings ?? 0))
                         } 
                       />
                     </Link>

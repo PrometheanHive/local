@@ -26,9 +26,9 @@ export function CardItem({ title, description, imageUrl, available }: CardItemPr
         {description}
       </Text>
 
-      <Button color="blue" fullWidth mt="md" radius="md">
+      {/* <Button color="blue" fullWidth mt="md" radius="md">
         Book now
-      </Button>
+      </Button> */}
     </Card>
   );
 }

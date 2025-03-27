@@ -48,6 +48,8 @@ class EventSchema(Schema):
     location: str
     price: float
     photos: List[str] = []
+    number_of_guests: int
+    number_of_bookings: int
 
 
 class BookingSchema(Schema):
@@ -205,7 +207,9 @@ def list_all_events(request):
         occurence_date=str(event.occurence_date),
         location=event.location or "",
         price=float(event.price),
-        photos=event.photos or [] 
+        photos=event.photos or [],
+        number_of_guests=event.number_of_guests,
+        number_of_bookings=event.number_of_bookings
     ) for event in events
 ]
 
