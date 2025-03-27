@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { TextInput, Text, Textarea, NumberInput, Button, Group, Paper, Title, Container, FileInput, Grid } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
+import { IconCalendar } from '@tabler/icons-react';
 import Api, { API_BASE } from '@/api/API';
 
 export function CreateExperience() {
@@ -41,7 +42,7 @@ export function CreateExperience() {
       });
 
       if (response.data.fileUrl) {
-        setFileUrls((currentUrls) => [...currentUrls, response.data.fileUrl]); // Store uploaded file path
+        setFileUrls((currentUrls) => [...currentUrls, response.data.fileUrl]);
       }
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -57,7 +58,7 @@ export function CreateExperience() {
 
     const updatedFormValues = {
       ...values,
-      photos: fileUrls, // Send saved file paths instead of file objects
+      photos: fileUrls,
     };
 
     try {
@@ -65,7 +66,7 @@ export function CreateExperience() {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
-  
+
       console.log("Experience created:", response);
       navigate("/");
     } catch (error) {
@@ -99,8 +100,29 @@ export function CreateExperience() {
                   multiple
                   accept="image/png,image/jpeg"
                 />
+                {fileUrls.length > 0 && (
+                  <div style={{ marginTop: '10px' }}>
+                    <Text size="sm" fw={500}>Uploaded Images:</Text>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '5px' }}>
+                      {fileUrls.map((url, index) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`Uploaded ${index + 1}`}
+                          style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </fieldset>
-              <DateTimePicker required label="Experience Date" {...form.getInputProps('occurence_date')} placeholder="Pick a date" />
+              <DateTimePicker
+                required
+                label="Experience Date"
+                placeholder="Pick a date"
+                {...form.getInputProps('occurence_date')}
+              />
+
               <TextInput required label="Experience Location" {...form.getInputProps('location')} />
               <TextInput
                 required
