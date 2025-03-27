@@ -44,31 +44,34 @@ export function LandingPage() {
           Browse Experiences
         </Title>
         <Container>
-          <Grid justify="center">
-            {experiences.length === 0 ? (
-              <p style={{ textAlign: 'center', fontSize: '18px' }}>
-                No experiences available.
-              </p>
-            ) : (
-              experiences.map((card) =>
-                card.number_of_guests !== 0 && (
-                  <Grid.Col key={card.id} span={4}>
-                    <Link to={`/experience/${card.id}`} style={{ textDecoration: 'none' }}>
-                      <CardItem
-                        title={card.title}
-                        description={card.description}
-                        imageUrl={card.photos?.[0] ?? ""}
-                        available={Math.max( 0,
-                          (card.number_of_guests ?? 2) -
-                          (card.number_of_bookings ?? 0))
-                        } 
-                      />
-                    </Link>
-                  </Grid.Col>
-                )
+        <Grid justify="center" gutter="md">
+          {experiences.length === 0 ? (
+            <p style={{ textAlign: 'center', fontSize: '18px' }}>
+              No experiences available.
+            </p>
+          ) : (
+            experiences.map((card) =>
+              card.number_of_guests !== 0 && (
+                <Grid.Col
+                  key={card.id}
+                  span={{ base: 12, sm: 6, md: 4 }}
+                >
+                  <Link to={`/experience/${card.id}`} style={{ textDecoration: 'none' }}>
+                    <CardItem
+                      title={card.title}
+                      description={card.description}
+                      imageUrl={card.photos?.[0] ?? ""}
+                      available={Math.max(
+                        0,
+                        (card.number_of_guests ?? 2) - (card.number_of_bookings ?? 0)
+                      )}
+                    />
+                  </Link>
+                </Grid.Col>
               )
-            )}
-          </Grid>
+            )
+          )}
+        </Grid>
         </Container>
       </section>
     </div>
