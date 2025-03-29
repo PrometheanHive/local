@@ -117,7 +117,7 @@ export function CreateExperience() {
                 )}
               </fieldset>
               <DateTimePicker
-                required
+                required dropdownType="modal"
                 label="Experience Date"
                 placeholder="Pick a date"
                 {...form.getInputProps('occurence_date')}
