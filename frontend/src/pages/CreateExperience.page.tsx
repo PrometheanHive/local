@@ -1,33 +1,48 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TextInput, Text, Textarea, NumberInput, Button, Group, Paper, Title, Container, FileInput, Grid } from '@mantine/core';
+import { TextInput, Text, Textarea, NumberInput, Button, Group, Paper, Title, Container, CloseButton, Grid, Center } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
+import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import { IconCalendar } from '@tabler/icons-react';
 import Api, { API_BASE } from '@/api/API';
 
+interface FormValues {
+  title: string;
+  number_of_guests: number | undefined;
+  number_of_bookings: number;
+  description: string;
+  unique_aspect: string;
+  price: number | undefined;
+  occurence_date: string;
+  location: string;
+  photos: File[] | null;
+  passphrase: string;
+  files: File[];
+}
+
 export function CreateExperience() {
   const [fileUrls, setFileUrls] = useState<string[]>([]);
-
-  const form = useForm({
+  const form = useForm<FormValues>({
     initialValues: {
       title: '',
-      number_of_guests: undefined as number | undefined,
+      number_of_guests: undefined,
       number_of_bookings: 0,
       description: '',
       unique_aspect: '',
-      price: undefined as number | undefined,
+      price: undefined,
       occurence_date: '',
       location: '',
-      photos: null as File[] | null,
+      photos: null,
       passphrase: '',
+      files: [],
     },
   });
 
   const navigate = useNavigate();
 
-  const handleFileChange = async (event: File[]) => {
-    const file = event[0];
+  const handleFileChange = async (files: File[]) => {
+    const file = files[0];
     if (!file) return;
 
     const formData = new FormData();
@@ -74,12 +89,27 @@ export function CreateExperience() {
     }
   };
 
+  const selectedFiles = form.getValues().files.map((file, index) => (
+    <Text key={file.name}>
+      <b>{file.name}</b> ({(file.size / 1024).toFixed(2)} kb)
+      <CloseButton
+        size="xs"
+        onClick={() =>
+          form.setFieldValue(
+            'files',
+            form.values.files.filter((_, i) => i !== index)
+          )
+        }
+      />
+    </Text>
+  ));
+
   return (
     <Container my={40}>
       <Paper p="md" shadow="xs">
         <Title order={2} mb="lg">Create a new experience</Title>
         <Text size="sm" mb="lg">
-          This is where you can post any experiences you wish to share with travelers! Make sure to fill out every single category as they are all required. Once you have filled everything out, click “Post experience” and we will take it from there.
+          This is where you can post any experiences you wish to share with travelers! Make sure to fill out every single category as they are all required. Once you have filled everything out, cl[...]
         </Text>
 
         <form onSubmit={form.onSubmit(handleSubmit)}>
@@ -94,26 +124,34 @@ export function CreateExperience() {
               <NumberInput required label="Experience Price" {...form.getInputProps('price')} />
               <fieldset style={{ border: "none", padding: 0, margin: 0 }}>
                 <legend style={{ fontSize: '0.875rem', marginBottom: '4px' }}>Experience Pictures</legend>
-                <FileInput
-                  required
-                  onChange={(files) => handleFileChange(files as File[])}
+                <Dropzone
+                  h={120}
+                  p={0}
                   multiple
-                  accept="image/png,image/jpeg"
-                />
-                {fileUrls.length > 0 && (
-                  <div style={{ marginTop: '10px' }}>
-                    <Text size="sm" fw={500}>Uploaded Images:</Text>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '5px' }}>
-                      {fileUrls.map((url, index) => (
-                        <img
-                          key={index}
-                          src={url}
-                          alt={`Uploaded ${index + 1}`}
-                          style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                  accept={[MIME_TYPES.png, MIME_TYPES.jpeg, MIME_TYPES.svg]}
+                  onDrop={(files) => form.setFieldValue('files', files)}
+                  onReject={() => form.setFieldError('files', 'Select images only')}
+                >
+                  <Center h={120}>
+                    <Dropzone.Idle>Drop files here</Dropzone.Idle>
+                    <Dropzone.Accept>Drop files here</Dropzone.Accept>
+                    <Dropzone.Reject>Files are invalid</Dropzone.Reject>
+                  </Center>
+                </Dropzone>
+
+                {form.errors.files && (
+                  <Text c="red" mt={5}>
+                    {form.errors.files}
+                  </Text>
+                )}
+
+                {selectedFiles.length > 0 && (
+                  <>
+                    <Text mb={5} mt="md">
+                      Selected files:
+                    </Text>
+                    {selectedFiles}
+                  </>
                 )}
               </fieldset>
               <DateTimePicker
