@@ -1,9 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  TextInput, Text, Textarea, NumberInput, Button, Group, Paper, Title, Container,
-  CloseButton, Grid, Center, Stack, Card, Modal, Divider
-} from '@mantine/core';
+import { TextInput, Text, Textarea, NumberInput, Button, Group, Paper, Title, Container, CloseButton, Grid, Center, Stack } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
@@ -22,18 +19,8 @@ interface FormValues {
   passphrase: string;
 }
 
-interface Event {
-  id: number;
-  title: string;
-  number_of_bookings: number;
-}
-
 export function CreateExperience() {
   const [fileUrls, setFileUrls] = useState<string[]>([]);
-  const [yourEvents, setYourEvents] = useState<Event[]>([]);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-
   const form = useForm<FormValues>({
     initialValues: {
       title: '',
@@ -51,12 +38,6 @@ export function CreateExperience() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    Api.instance.get(`${API_BASE}/general/user/hosted_events`, { withCredentials: true })
-      .then((res) => setYourEvents(res.data))
-      .catch((err) => console.error(err));
-  }, []);
-
   const handleSubmit = async (values: typeof form.values) => {
     if (values.passphrase !== "iamahost") {
       alert("Incorrect host code phrase. Please contact support.");
@@ -64,6 +45,7 @@ export function CreateExperience() {
     }
 
     try {
+      // Step 1: Create event (without photos)
       const eventResponse = await Api.instance.post(`${API_BASE}/general/event/create`, {
         ...values,
         photos: []
@@ -75,6 +57,7 @@ export function CreateExperience() {
       const eventId = eventResponse.data.event_id;
       const uploadedUrls: string[] = [];
 
+      // Step 2: Upload images
       for (const file of values.photos) {
         const formData = new FormData();
         formData.append("file", file);
@@ -91,6 +74,7 @@ export function CreateExperience() {
         uploadedUrls.push(uploadResponse.data.fileUrl);
       }
 
+      // Step 3: Patch event with photo URLs
       await Api.instance.patch(`${API_BASE}/general/event/id/${eventId}/update_photos`, {
         photos: uploadedUrls
       }, {
@@ -103,12 +87,6 @@ export function CreateExperience() {
       console.error("Error creating experience or uploading photos:", error);
       alert("There was a problem creating the experience. Please try again.");
     }
-  };
-
-  const handleDeleteEvent = async (eventId: number) => {
-    await Api.instance.delete(`${API_BASE}/general/event/delete/${eventId}`, { withCredentials: true });
-    setYourEvents((prev) => prev.filter(e => e.id !== eventId));
-    setDeleteModalOpen(false);
   };
 
   const selectedFiles = form.values.photos.map((file: File, index: number) => (
@@ -190,21 +168,6 @@ export function CreateExperience() {
             </Grid.Col>
           </Grid>
         </form>
-
-        <Divider my="lg" />
-
-        <Title order={2}>Your Events</Title>
-        {yourEvents.map(event => (
-          <Card key={event.id} shadow="sm" p="lg" mb="sm">
-            <Text><strong>{event.title}</strong> - {event.number_of_bookings} bookings</Text>
-            <Button color="red" onClick={() => { setSelectedEvent(event); setDeleteModalOpen(true); }}>Delete</Button>
-          </Card>
-        ))}
-
-        <Modal opened={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Deletion">
-          <Text>Are you sure you want to delete "{selectedEvent?.title}"?</Text>
-          <Button color="red" onClick={() => selectedEvent && handleDeleteEvent(selectedEvent.id)}>Yes, Delete</Button>
-        </Modal>
       </Paper>
     </Container>
   );
