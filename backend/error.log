@@ -329,3 +329,33 @@ Traceback (most recent call last):
            ^^^^^^
 NameError: name 'models' is not defined
 Internal Server Error: /api/general/event/3/reviews
+name 'get_object_or_404' is not defined
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 338, in delete_booking
+    booking = get_object_or_404(Booking, id=booking_id)
+              ^^^^^^^^^^^^^^^^^
+NameError: name 'get_object_or_404' is not defined
+Internal Server Error: /api/general/booking/delete/7
+name 'get_object_or_404' is not defined
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 347, in delete_event
+    event = get_object_or_404(Event, id=event_id)
+            ^^^^^^^^^^^^^^^^^
+NameError: name 'get_object_or_404' is not defined
+Internal Server Error: /api/general/event/delete/31
+name 'get_object_or_404' is not defined
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 338, in delete_booking
+    booking = get_object_or_404(Booking, id=booking_id)
+              ^^^^^^^^^^^^^^^^^
+NameError: name 'get_object_or_404' is not defined
+Internal Server Error: /api/general/booking/delete/7

@@ -11,6 +11,8 @@ from .models import Event, Booking
 from ninja.errors import HttpError
 from datetime import datetime
 from . import models
+from django.shortcuts import get_object_or_404
+
 
 
 router = Router()
@@ -335,6 +337,9 @@ def create_review(request, payload: ReviewCreateSchema):
 
 @router.delete("/booking/delete/{booking_id}")
 def delete_booking(request, booking_id: int):
+    if not request.user or not request.user.is_authenticated:
+        return HttpResponseForbidden("Authentication required")
+
     booking = get_object_or_404(Booking, id=booking_id)
     event = booking.event
     booking.delete()
@@ -345,6 +350,8 @@ def delete_booking(request, booking_id: int):
 @router.delete("/event/delete/{event_id}")
 def delete_event(request, event_id: int):
     event = get_object_or_404(Event, id=event_id)
+    if not request.user or not request.user.is_authenticated:
+        return HttpResponseForbidden("Authentication required")
 
     # Only allow the host to delete
     if event.host != request.user:
