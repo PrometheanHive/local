@@ -97,7 +97,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         <Card shadow="sm">
           <Stack gap="sm">
             <Title order={2}>Payment methods</Title>
-            <Button variant="filled" color="black" style={{ width: "200px" }}>
+            <Button disabled variant="filled" color="black" style={{ width: "200px" }}>
               Add payment method
             </Button>
           </Stack>
