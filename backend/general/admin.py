@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import EventTags, Event
+from .models import EventTags, Event, Review, Booking
 
-# Register your models here.
-admin.site.register([EventTags, Event])
+# Register all models with the Django admin site
+admin.site.register([EventTags, Event, Review, Booking])
