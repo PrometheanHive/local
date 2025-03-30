@@ -4,7 +4,6 @@ import { TextInput, Text, Textarea, NumberInput, Button, Group, Paper, Title, Co
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
-import { IconCalendar } from '@tabler/icons-react';
 import Api, { API_BASE } from '@/api/API';
 
 interface FormValues {
@@ -16,9 +15,8 @@ interface FormValues {
   price: number | undefined;
   occurence_date: string;
   location: string;
-  photos: File[] | null;
+  photos: File[];
   passphrase: string;
-  files: File[];
 }
 
 export function CreateExperience() {
@@ -33,9 +31,8 @@ export function CreateExperience() {
       price: undefined,
       occurence_date: '',
       location: '',
-      photos: null,
+      photos: [],
       passphrase: '',
-      files: [],
     },
   });
 
@@ -89,27 +86,27 @@ export function CreateExperience() {
     }
   };
 
-  const selectedFiles = form.values.files.map((file: File, index: number) => (
+  const selectedFiles = form.values.photos.map((file: File, index: number) => (
     <Text key={file.name}>
       <b>{file.name}</b> ({(file.size / 1024).toFixed(2)} kb)
       <CloseButton
         size="xs"
         onClick={() =>
           form.setFieldValue(
-            'files',
-            form.values.files.filter((_, i) => i !== index)
+            'photos',
+            form.values.photos.filter((_, i) => i !== index)
           )
         }
       />
     </Text>
-  ));  
+  ));
 
   return (
     <Container my={40}>
       <Paper p="md" shadow="xs">
         <Title order={2} mb="lg">Create a new experience</Title>
         <Text size="sm" mb="lg">
-          This is where you can post any experiences you wish to share with travelers! Make sure to fill out every single category as they are all required. Once you have filled everything out, cl[...]
+          This is where you can post any experiences you wish to share with travelers! Make sure to fill out every single category as they are all required. Once you have filled everything out, click “Post experience” and we will take it from there.
         </Text>
 
         <form onSubmit={form.onSubmit(handleSubmit)}>
@@ -129,16 +126,19 @@ export function CreateExperience() {
                   p={0}
                   multiple
                   accept={[MIME_TYPES.png, MIME_TYPES.jpeg, MIME_TYPES.svg]}
-                  onDrop={(files) => form.setFieldValue('files', files)}
-                  onReject={() => form.setFieldError('files', 'Select images only')}
+                  onDrop={(files: File[]) => {
+                    form.setFieldValue('photos', files);
+                    handleFileChange(files);
+                  }}
+                  onReject={() => form.setFieldError('photos', 'Select images only')}
                 >
                   <Center h={120}>
-                    <Dropzone.Idle>Drop files here</Dropzone.Idle>
-                    <Dropzone.Accept>Drop files here</Dropzone.Accept>
-                    <Dropzone.Reject>Files are invalid</Dropzone.Reject>
+                    <Dropzone.Idle>Drop images here or click to upload</Dropzone.Idle>
+                    <Dropzone.Accept>Drop images here</Dropzone.Accept>
+                    <Dropzone.Reject>Invalid file type</Dropzone.Reject>
                   </Center>
                 </Dropzone>
-
+                
                 {form.errors.files && (
                   <Text c="red" mt={5}>
                     {form.errors.files}
@@ -154,13 +154,7 @@ export function CreateExperience() {
                   </>
                 )}
               </fieldset>
-              <DateTimePicker
-                required dropdownType="modal"
-                label="Experience Date"
-                placeholder="Pick a date"
-                {...form.getInputProps('occurence_date')}
-              />
-
+              <DateTimePicker required label="Experience Date" {...form.getInputProps('occurence_date')} placeholder="Pick a date" />
               <TextInput required label="Experience Location" {...form.getInputProps('location')} />
               <TextInput
                 required
