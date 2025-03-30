@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Paper, Title, Text, Card, Button, Divider, Stack, Modal } from '@mantine/core';
+import { Container, Paper, Title, Text, Card, Button, Divider, Stack, Modal, Group } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
 import { useNavigate } from 'react-router-dom';
 
@@ -65,9 +65,24 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   }, []);
 
   const handleDeleteEvent = async (eventId: number) => {
-    await Api.instance.delete(`${API_BASE}/general/event/delete/${eventId}`, { withCredentials: true });
-    setYourEvents((prev) => prev.filter(e => e.id !== eventId));
-    setDeleteModalOpen(false);
+    try {
+      await Api.instance.delete(`${API_BASE}/general/event/delete/${eventId}`, { withCredentials: true });
+      setYourEvents((prev) => prev.filter(e => e.id !== eventId));
+      setDeleteModalOpen(false);
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: number) => {
+    try {
+      await Api.instance.delete(`${API_BASE}/general/booking/delete/${bookingId}`, {
+        withCredentials: true,
+      });
+      setBookings(prev => prev.filter(b => b.id !== bookingId));
+    } catch (err) {
+      console.error('Failed to delete booking:', err);
+    }
   };
 
   const handleLogout = async () => {
@@ -101,9 +116,18 @@ export function AccountSettings({ user }: AccountSettingsProps) {
             <Title order={2}>Your Bookings</Title>
             {bookings.length > 0 ? (
               bookings.map((booking: Booking) => (
-                <Text key={booking.id}>
-                  <strong>{booking.event_title}</strong> - {new Date(booking.event_date).toLocaleDateString()} at {new Date(booking.event_date).toLocaleTimeString([], { timeStyle: 'short' })}
-                </Text>
+                <Group key={booking.id} justify="space-between">
+                  <Text>
+                    <strong>{booking.event_title}</strong> – {new Date(booking.event_date).toLocaleDateString()}
+                  </Text>
+                  <Button
+                    color="red"
+                    size="xs"
+                    onClick={() => handleDeleteBooking(booking.id)}
+                  >
+                    Cancel
+                  </Button>
+                </Group>
               ))
             ) : (
               <Text c="dimmed">No bookings found.</Text>

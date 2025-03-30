@@ -341,3 +341,14 @@ def delete_booking(request, booking_id: int):
     event.number_of_bookings = Booking.objects.filter(event=event).count()
     event.save()
     return {"success": True}
+
+@router.delete("/event/delete/{event_id}")
+def delete_event(request, event_id: int):
+    event = get_object_or_404(Event, id=event_id)
+
+    # Only allow the host to delete
+    if event.host != request.user:
+        return HttpResponseForbidden("You are not allowed to delete this event")
+
+    event.delete()
+    return {"success": True, "message": "Event deleted successfully"}
