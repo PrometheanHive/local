@@ -202,6 +202,10 @@ def get_user_bookings(request):
         ) for booking in bookings
     ]
 
+@router.get("/user/hosted_events")
+def get_user_events(request):
+    return list(Event.objects.filter(host=request.user).values())
+
 
 @router.get("/event/get_all", response=List[EventSchema])
 def list_all_events(request):
@@ -305,25 +309,6 @@ def register_booking(request, event_id: int):
 
     return {"id": booking.id, "message": "Booking already exists"}
 
-
-
-@router.get("/user/bookings", response=List[BookingSchema])
-def get_user_bookings(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "Not authenticated"}, status=401)
-
-    bookings = models.Booking.objects.filter(guest=request.user).select_related('event')
-
-    return [
-        BookingSchema(
-            id=booking.id,
-            event_id=booking.event.id,
-            event_title=booking.event.title,
-            event_date=str(booking.event.occurence_date)
-        )
-        for booking in bookings
-    ]
-
 @router.post("/reviews/create")
 def create_review(request, payload: ReviewCreateSchema):
     if not request.user.is_authenticated:
@@ -347,3 +332,12 @@ def create_review(request, payload: ReviewCreateSchema):
         "message": "Review created successfully",
         "review_id": review.id
     })
+
+@router.delete("/booking/delete/{booking_id}")
+def delete_booking(request, booking_id: int):
+    booking = get_object_or_404(Booking, id=booking_id)
+    event = booking.event
+    booking.delete()
+    event.number_of_bookings = Booking.objects.filter(event=event).count()
+    event.save()
+    return {"success": True}
