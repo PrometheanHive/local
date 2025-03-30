@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TextInput, Text, Textarea, NumberInput, Button, Group, Paper, Title, Container, CloseButton, Grid, Center } from '@mantine/core';
+import { TextInput, Text, Textarea, NumberInput, Button, Group, Paper, Title, Container, CloseButton, Grid, Center, Stack } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
@@ -38,39 +38,39 @@ export function CreateExperience() {
 
   const navigate = useNavigate();
 
-  const handleFileChange = async (files: File[]) => {
-    const file = files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await Api.instance.post<{ fileUrl: string }>(`${API_BASE}/general/upload`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        withCredentials: true,
-      });
-
-      if (response.data.fileUrl) {
-        setFileUrls((currentUrls) => [...currentUrls, response.data.fileUrl]);
-      }
-    } catch (error) {
-      console.error("Error uploading file:", error);
-    }
-  };
-
   const handleSubmit = async (values: typeof form.values) => {
-    console.log("Submitting experience with images:", fileUrls);
+    console.log("Preparing to upload images...");
     if (values.passphrase !== "iamahost") {
       alert("Incorrect host code phrase. Please contact support.");
       return;
     }
 
+    const urls: string[] = [];
+    for (const file of values.photos) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await Api.instance.post<{ fileUrl: string }>(`${API_BASE}/general/upload`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+        });
+
+        if (response.data.fileUrl) {
+          urls.push(response.data.fileUrl);
+        }
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        alert("There was a problem uploading one or more images. Please try again.");
+        return;
+      }
+    }
+
     const updatedFormValues = {
       ...values,
-      photos: fileUrls,
+      photos: urls,
     };
 
     try {
@@ -87,18 +87,18 @@ export function CreateExperience() {
   };
 
   const selectedFiles = form.values.photos.map((file: File, index: number) => (
-    <Text key={file.name}>
-      <b>{file.name}</b> ({(file.size / 1024).toFixed(2)} kb)
+    <Group key={file.name} gap={4} align="center">
+      <Text>
+        <b>{file.name}</b> ({(file.size / 1024).toFixed(2)} kb)
+      </Text>
       <CloseButton
         size="xs"
-        onClick={() =>
-          form.setFieldValue(
-            'photos',
-            form.values.photos.filter((_, i) => i !== index)
-          )
-        }
+        onClick={() => {
+          const updatedPhotos = form.values.photos.filter((_, i) => i !== index);
+          form.setFieldValue('photos', updatedPhotos);
+        }}
       />
-    </Text>
+    </Group>
   ));
 
   return (
@@ -127,8 +127,8 @@ export function CreateExperience() {
                   multiple
                   accept={[MIME_TYPES.png, MIME_TYPES.jpeg, MIME_TYPES.svg]}
                   onDrop={(files: File[]) => {
-                    form.setFieldValue('photos', files);
-                    handleFileChange(files);
+                    const updated = [...form.values.photos, ...files];
+                    form.setFieldValue('photos', updated);
                   }}
                   onReject={() => form.setFieldError('photos', 'Select images only')}
                 >
@@ -138,23 +138,19 @@ export function CreateExperience() {
                     <Dropzone.Reject>Invalid file type</Dropzone.Reject>
                   </Center>
                 </Dropzone>
-                
-                {form.errors.files && (
-                  <Text c="red" mt={5}>
-                    {form.errors.files}
-                  </Text>
-                )}
-
-                {selectedFiles.length > 0 && (
-                  <>
-                    <Text mb={5} mt="md">
-                      Selected files:
-                    </Text>
+                {form.values.photos.length > 0 && (
+                  <Stack mt="md">
+                    <Text size="sm" fw={500}>Selected files:</Text>
                     {selectedFiles}
-                  </>
+                  </Stack>
                 )}
               </fieldset>
-              <DateTimePicker required label="Experience Date" {...form.getInputProps('occurence_date')} placeholder="Pick a date" />
+              <DateTimePicker
+                required
+                valueFormat="DD MMM YYYY hh:mm A"
+                dropdownType="modal"
+                label="Experience Date" {...form.getInputProps('occurence_date')}
+                placeholder="Pick a date" />
               <TextInput required label="Experience Location" {...form.getInputProps('location')} />
               <TextInput
                 required
