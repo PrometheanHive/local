@@ -83,24 +83,37 @@ class ReviewCreateSchema(Schema):
     text: str
     rating: int
 
+class PhotoUpdateSchema(Schema):
+    photos: List[str]
 
 
 ### File Upload API
 @router.post("/upload")
-def upload_file(request, file: UploadedFile = File(...)):
-    """Handles file uploads and stores them on the EC2 attached volume."""
-    
+def upload_file(request, file: UploadedFile = File(...), event_id: int = 0):
+    """Handles file uploads and stores them in a per-event subdirectory."""
     if not os.path.exists(UPLOAD_DIR):
-        os.makedirs(UPLOAD_DIR)  # Ensure directory exists
+        os.makedirs(UPLOAD_DIR)
 
-    file_path = os.path.join(UPLOAD_DIR, file.name)
+    # Use event_id to create subdirectory
+    event_folder = os.path.join(UPLOAD_DIR, str(event_id))
+    os.makedirs(event_folder, exist_ok=True)
 
-    # Save file to local storage
+    file_path = os.path.join(event_folder, file.name)
+
     with open(file_path, "wb") as f:
-        f.write(file.read())  # Use `.read()` instead of `.chunks()` for efficiency
+        f.write(file.read())
 
-    # Return the accessible file path
-    return json_response({"fileUrl": f"/media/{file.name}"})  # URL for frontend access
+    return json_response({"fileUrl": f"/media/{event_id}/{file.name}"})
+
+@router.patch("/event/id/{event_id}/update_photos")
+def update_event_photos(request, event_id: int, payload: PhotoUpdateSchema):
+    try:
+        event = Event.objects.get(id=event_id)
+        event.photos = payload.photos
+        event.save()
+        return json_response({"message": "Photos updated successfully"})
+    except Event.DoesNotExist:
+        raise HttpError(404, "Event not found")
 
 
 ### Health Check API

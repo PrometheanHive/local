@@ -39,50 +39,53 @@ export function CreateExperience() {
   const navigate = useNavigate();
 
   const handleSubmit = async (values: typeof form.values) => {
-    console.log("Preparing to upload images...");
     if (values.passphrase !== "iamahost") {
       alert("Incorrect host code phrase. Please contact support.");
       return;
     }
 
-    const urls: string[] = [];
-    for (const file of values.photos) {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await Api.instance.post<{ fileUrl: string }>(`${API_BASE}/general/upload`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-        });
-
-        if (response.data.fileUrl) {
-          urls.push(response.data.fileUrl);
-        }
-      } catch (error) {
-        console.error("Error uploading file:", error);
-        alert("There was a problem uploading one or more images. Please try again.");
-        return;
-      }
-    }
-
-    const updatedFormValues = {
-      ...values,
-      photos: urls,
-    };
-
     try {
-      const response = await Api.instance.post(`${API_BASE}/general/event/create`, updatedFormValues, {
+      // Step 1: Create event (without photos)
+      const eventResponse = await Api.instance.post(`${API_BASE}/general/event/create`, {
+        ...values,
+        photos: []
+      }, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
 
-      console.log("Experience created:", response);
+      const eventId = eventResponse.data.event_id;
+      const uploadedUrls: string[] = [];
+
+      // Step 2: Upload images
+      for (const file of values.photos) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const uploadResponse = await Api.instance.post<{ fileUrl: string }>(
+          `${API_BASE}/general/upload?event_id=${eventId}`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
+        );
+
+        uploadedUrls.push(uploadResponse.data.fileUrl);
+      }
+
+      // Step 3: Patch event with photo URLs
+      await Api.instance.patch(`${API_BASE}/general/event/id/${eventId}/update_photos`, {
+        photos: uploadedUrls
+      }, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true,
+      });
+
       navigate("/");
     } catch (error) {
-      console.error("Error creating experience:", error);
+      console.error("Error creating experience or uploading photos:", error);
+      alert("There was a problem creating the experience. Please try again.");
     }
   };
 
@@ -106,7 +109,7 @@ export function CreateExperience() {
       <Paper p="md" shadow="xs">
         <Title order={2} mb="lg">Create a new experience</Title>
         <Text size="sm" mb="lg">
-          This is where you can post any experiences you wish to share with travelers! Make sure to fill out every single category as they are all required. Once you have filled everything out, click “Post experience” and we will take it from there.
+          This is where you can post any experiences you wish to share with travelers! Make sure to fill out every single category as they are all required.
         </Text>
 
         <form onSubmit={form.onSubmit(handleSubmit)}>
