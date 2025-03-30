@@ -89,7 +89,7 @@ export function CreateExperience() {
     }
   };
 
-  const selectedFiles = form.getValues().files.map((file, index) => (
+  const selectedFiles = form.values.files.map((file: File, index: number) => (
     <Text key={file.name}>
       <b>{file.name}</b> ({(file.size / 1024).toFixed(2)} kb)
       <CloseButton
@@ -102,7 +102,7 @@ export function CreateExperience() {
         }
       />
     </Text>
-  ));
+  ));  
 
   return (
     <Container my={40}>
