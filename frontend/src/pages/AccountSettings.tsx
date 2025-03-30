@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Paper, Title, Text, Card, Button, Divider, Stack } from '@mantine/core';
+import { Container, Paper, Title, Text, Card, Button, Divider, Stack, Modal } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
-//import { CometChatUIKit } from "@cometchat/chat-uikit-react";
 import { useNavigate } from 'react-router-dom';
 
 interface User {
@@ -15,6 +14,12 @@ interface Booking {
   event_date: string;
 }
 
+interface Event {
+  id: number;
+  title: string;
+  number_of_bookings: number;
+}
+
 interface AccountSettingsProps {
   user: User;
 }
@@ -22,12 +27,13 @@ interface AccountSettingsProps {
 export function AccountSettings({ user }: AccountSettingsProps) {
   const navigate = useNavigate();
 
-  // Ensure user data is initialized properly
   const [name, setName] = useState<string>(user?.username || "");
   const [email, setEmail] = useState<string>(user?.email || "");
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [yourEvents, setYourEvents] = useState<Event[]>([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
-  // Update state when user prop changes
   useEffect(() => {
     if (user) {
       setName(user.username || "");
@@ -44,16 +50,30 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         console.error('Failed to fetch bookings:', error);
       }
     };
+
+    const fetchYourEvents = async () => {
+      try {
+        const res = await Api.instance.get<Event[]>(`${API_BASE}/general/user/hosted_events`, { withCredentials: true });
+        setYourEvents(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     fetchBookings();
+    fetchYourEvents();
   }, []);
+
+  const handleDeleteEvent = async (eventId: number) => {
+    await Api.instance.delete(`${API_BASE}/general/event/delete/${eventId}`, { withCredentials: true });
+    setYourEvents((prev) => prev.filter(e => e.id !== eventId));
+    setDeleteModalOpen(false);
+  };
 
   const handleLogout = async () => {
     try {
       await Api.instance.post(`${API_BASE}/general/user/logout`, {}, { withCredentials: true });
-      //await CometChatUIKit.logout();
-      console.log("Logout successful");
-
-      window.location.href = '/'; // Refresh and redirect to homepage
+      window.location.href = '/';
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -64,7 +84,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
       <Paper p="md">
         <Title order={1} mb="lg">Profile</Title>
 
-        {/*  Account Details */}
+        {/* Account Details */}
         <Card shadow="sm" p="lg">
           <Stack gap="sm">
             <Title order={2}>Account details</Title>
@@ -75,7 +95,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
 
         <Divider my="lg" />
 
-        {/*  User Bookings */}
+        {/* User Bookings */}
         <Card shadow="sm">
           <Stack gap="sm">
             <Title order={2}>Your Bookings</Title>
@@ -93,7 +113,22 @@ export function AccountSettings({ user }: AccountSettingsProps) {
 
         <Divider my="lg" />
 
-        {/*  Payment Methods */}
+        {/* Hosted Events */}
+        <Card shadow="sm">
+          <Stack gap="sm">
+            <Title order={2}>Your Events</Title>
+            {yourEvents.map(event => (
+              <Card key={event.id} shadow="xs" p="md">
+                <Text><strong>{event.title}</strong> - {event.number_of_bookings} bookings</Text>
+                <Button color="red" size="xs" onClick={() => { setSelectedEvent(event); setDeleteModalOpen(true); }}>Delete</Button>
+              </Card>
+            ))}
+          </Stack>
+        </Card>
+
+        <Divider my="lg" />
+
+        {/* Payment Methods */}
         <Card shadow="sm">
           <Stack gap="sm">
             <Title order={2}>Payment methods</Title>
@@ -105,12 +140,17 @@ export function AccountSettings({ user }: AccountSettingsProps) {
 
         <Divider my="lg" />
 
-        {/* Logout Button */}
+        {/* Logout */}
         <Card shadow="sm">
           <Stack gap="sm">
             <Button onClick={handleLogout} color="red">Logout</Button>
           </Stack>
         </Card>
+
+        <Modal opened={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Deletion">
+          <Text>Are you sure you want to delete "{selectedEvent?.title}"?</Text>
+          <Button color="red" onClick={() => selectedEvent && handleDeleteEvent(selectedEvent.id)}>Yes, Delete</Button>
+        </Modal>
       </Paper>
     </Container>
   );
