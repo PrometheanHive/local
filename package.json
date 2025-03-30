@@ -2,6 +2,7 @@
   "dependencies": {
     "@cometchat/chat-sdk-javascript": "^4.0.4",
     "@cometchat/chat-uikit-react": "^4.3.0",
+    "@mantine/dropzone": "^7.17.3",
     "@tabler/icons-react": "^2.47.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
