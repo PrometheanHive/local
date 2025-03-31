@@ -4,6 +4,9 @@ from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
 
 class EventTags(models.Model):
     tag_name = models.CharField(max_length=200, unique=True)
@@ -56,3 +59,17 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.guest.username} booked {self.event.title}"
+
+
+class CustomUser(AbstractUser):
+    bio = models.TextField(blank=True, null=True)
+    profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    is_traveler = models.BooleanField(default=False)
+    is_host = models.BooleanField(default=False)
+
+# class UserProfile(models.Model):
+#     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+#     bio = models.TextField(blank=True, null=True)
+#     profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+#     is_traveler = models.BooleanField(default=False)
+#     is_host = models.BooleanField(default=False)

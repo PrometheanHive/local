@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Paper, Title, Text, Card, Button, Divider, Stack, Modal, Group } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
 import { useNavigate } from 'react-router-dom';
-
-interface User {
-  username: string;
-  email: string;
-}
+import { User } from '@/types/UserTypes';
 
 interface Booking {
   id: number;
@@ -103,7 +99,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         <Card shadow="sm" p="lg">
           <Stack gap="sm">
             <Title order={2}>Account details</Title>
-            <Text size="lg"><strong>Name:</strong> {name}</Text>
+            <Text size="lg"><strong>Name:</strong> {user.first_name} {user.last_name}</Text>
             <Text size="lg"><strong>Email:</strong> {email}</Text>
           </Stack>
         </Card>
