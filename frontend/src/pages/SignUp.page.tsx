@@ -19,7 +19,6 @@ export function SignUp() {
     const auth = useAuth();
     const setUser = auth?.setUser || (() => {});
     const [bio, setBio] = useState<string>("");
-    const [profilePic, setProfilePic] = useState<File | null>(null);
 
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -35,9 +34,6 @@ export function SignUp() {
           formData.append("password", password);
           formData.append("bio", bio);
           formData.append("role", role);
-          if (profilePic) {
-            formData.append("profile_pic", profilePic);
-          }
       
           // Step 2: Submit user creation
           await Api.instance.post(`${API_BASE}/general/user/create`, formData, {
@@ -117,20 +113,6 @@ export function SignUp() {
                         value={bio}
                         onChange={(event) => setBio(event.target.value)}
                         style={{ width: "500px", display: 'inline-block', textAlign: 'left' }}
-                        required
-                    />
-                    </Container>
-
-                    <Container style={{ textAlign: 'center' }}>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) => {
-                        if (event.target.files && event.target.files[0]) {
-                            setProfilePic(event.target.files[0]);
-                        }
-                        }}
-                        style={{ marginTop: 20 }}
                     />
                     </Container>
 

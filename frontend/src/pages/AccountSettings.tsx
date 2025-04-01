@@ -100,7 +100,10 @@ export function AccountSettings({ user }: AccountSettingsProps) {
           <Stack gap="sm">
             <Title order={2}>Account details</Title>
             <Text size="lg"><strong>Name:</strong> {user.first_name} {user.last_name}</Text>
-            <Text size="lg"><strong>Email:</strong> {email}</Text>
+            <Text size="lg"><strong>Bio:</strong> {user.bio || '—'}</Text>
+            <Text size="lg"><strong>Traveler:</strong> {user.is_traveler ? 'Yes' : 'No'}</Text>
+            <Text size="lg"><strong>Host:</strong> {user.is_host ? 'Yes' : 'No'}</Text>
+
           </Stack>
         </Card>
 
