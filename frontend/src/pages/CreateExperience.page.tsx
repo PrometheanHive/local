@@ -128,6 +128,7 @@ export function CreateExperience() {
                   h={120}
                   p={0}
                   multiple
+                  required
                   accept={[MIME_TYPES.png, MIME_TYPES.jpeg, MIME_TYPES.svg]}
                   onDrop={(files: File[]) => {
                     const updated = [...form.values.photos, ...files];

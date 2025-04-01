@@ -18,51 +18,46 @@ export function SignUp() {
     const navigate = useNavigate();
     const auth = useAuth();
     const setUser = auth?.setUser || (() => {});
+    const [bio, setBio] = useState<string>("");
 
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-    
-        const values = { 
-            email: email, 
-            username: email, 
-            first_name: firstName, 
-            last_name: lastName, 
-            password: password 
-        };
-    
+      
         try {
-            // Create user
-            await Api.instance.post(`${API_BASE}/general/user/create`, values, {
-                withCredentials: true
-            });
-    
-            // Login user immediately after
-            const loginResponse = await Api.instance.post(`${API_BASE}/general/user/authenticate`, {
-                username: email,
-                password: password
-            }, {
-                withCredentials: true
-            });
-    
-            if (loginResponse.data && loginResponse.data.user_id) {
-                setUser(loginResponse.data.user_id);
-                // const cometChatLogin = email.replace(/[@.]/g, '');
-                // const user = new CometChat.User(cometChatLogin);
-                // user.setName(`${firstName} ${lastName}`);
-    
-                // await CometChatUIKit.createUser(user).catch(console.warn); // tolerate if already exists
-    
-                // await CometChatUIKit.login(cometChatLogin);
-    
-                // 🎯 Redirect to homepage
-                window.location.href = '/';
-            }
-    
+          // Step 1: Create FormData for multipart upload
+          const formData = new FormData();
+          formData.append("email", email);
+          formData.append("username", email);
+          formData.append("first_name", firstName);
+          formData.append("last_name", lastName);
+          formData.append("password", password);
+          formData.append("bio", bio);
+          formData.append("role", role);
+      
+          // Step 2: Submit user creation
+          await Api.instance.post(`${API_BASE}/general/user/create`, formData, {
+            withCredentials: true,
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+      
+          // Step 3: Log in user
+          const loginResponse = await Api.instance.post(`${API_BASE}/general/user/authenticate`, {
+            username: email,
+            password: password
+          }, {
+            withCredentials: true
+          });
+      
+          if (loginResponse.data && loginResponse.data.user_id) {
+            setUser(loginResponse.data.user_id);
+            window.location.href = '/';
+          }
         } catch (error) {
-            console.error("Signup or login failed:", error);
+          console.error("Signup or login failed:", error);
         }
-    };
+      };
+      
     
 
     return (
@@ -111,6 +106,16 @@ export function SignUp() {
                             required
                         />
                     </Container>
+                    <Container style={{ textAlign: 'center' }}>
+                        <TextInput
+                        label="Bio"
+                        placeholder="Tell us a bit about yourself"
+                        value={bio}
+                        onChange={(event) => setBio(event.target.value)}
+                        style={{ width: "500px", display: 'inline-block', textAlign: 'left' }}
+                    />
+                    </Container>
+
                     <Container style={{ textAlign: 'center' }}>
                         <RadioGroup
                             label="I want to sign up as"

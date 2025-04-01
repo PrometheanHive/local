@@ -36,6 +36,7 @@ class UserCreateSchema(Schema):
     email: str
 
 
+
 class UserAuthSchema(Schema):
     username: str
     password: str
@@ -127,27 +128,44 @@ def health_check(request):
 
 ### Authentication Endpoints
 @router.get("/user")
-def get_user(request):
-    """Ensure frontend doesn't crash by returning `user: null` when unauthorized."""
-    if request.user.is_authenticated:
-        return json_response({"username": request.user.username, "email": request.user.email})
-    else:
-        return json_response({"user": None}, status=200)  # Fix: Return `{ user: null }` instead of `401`
+def get_current_user(request):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Not logged in")
+
+    return {
+        "id": request.user.id,
+        "username": request.user.username,
+        "email": request.user.email,
+        "first_name": request.user.first_name,
+        "last_name": request.user.last_name,
+        "bio": request.user.bio,
+        "profile_pic": request.user.profile_pic.url if request.user.profile_pic else None,
+        "is_traveler": request.user.is_traveler,
+        "is_host": request.user.is_host
+    }
 
 
 @router.post("/user/create")
-def create_user(request, payload: UserCreateSchema):
-    if UserModel.objects.filter(username=payload.username).exists():
+def create_user(request):
+    data = request.POST
+
+    if UserModel.objects.filter(username=data.get("username")).exists():
         return json_response({"error": "Username already exists"}, status=400)
 
     user = UserModel.objects.create_user(
-        username=payload.username,
-        password=payload.password,
-        email=payload.email,
-        first_name=payload.first_name,
-        last_name=payload.last_name
+        username=data.get("username"),
+        password=data.get("password"),
+        email=data.get("email"),
+        first_name=data.get("first_name"),
+        last_name=data.get("last_name")
     )
-    return json_response({"message": "User created successfully", "user_id": user.id})
+
+    user.bio = data.get("bio", "")
+    user.is_traveler = data.get("role") in ["traveler", "both"]
+    user.is_host = data.get("role") in ["host", "both"]
+    user.save()
+
+    return json_response({"message": "User created", "user_id": user.id})
 
 
 @router.post("/user/authenticate")
@@ -269,7 +287,10 @@ def get_event_by_id(request, event_id: int):
             "location": event.location or "",
             "price": float(event.price),
             "photos": event.photos or [],
-            "host_first_name": event.host.first_name if event.host else "Unknown"
+            "host_first_name": event.host.first_name if event.host else "Unknown",
+            "host_last_name": event.host.last_name if event.host else "",
+            "host_profile_pic": event.host.profile_pic.url if event.host and event.host.profile_pic else "",
+            "host_id": event.host.id if event.host else None
         })
     except Event.DoesNotExist:
         raise HttpError(404, "Event not found")
