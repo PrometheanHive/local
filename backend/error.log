@@ -1480,3 +1480,13 @@ Traceback (most recent call last):
            ^^^^^^^^^^^^^^^^^^^^^^^^^
 TypeError: json_response() missing 1 required positional argument: 'data': Did you fail to use functools.wraps() in a decorator?
 Internal Server Error: /api/general/user
+'WSGIRequest' object has no attribute 'json'
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/ninja/operation.py", line 107, in run
+    result = self.view_func(request, **values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/backend/general/api.py", line 237, in update_user_profile
+    data = request.json()
+           ^^^^^^^^^^^^
+AttributeError: 'WSGIRequest' object has no attribute 'json'
+Internal Server Error: /api/general/user/update

@@ -12,6 +12,7 @@ from ninja.errors import HttpError
 from datetime import datetime
 from . import models
 from django.shortcuts import get_object_or_404
+import json
 
 
 
@@ -129,20 +130,21 @@ def health_check(request):
 ### Authentication Endpoints
 @router.get("/user")
 def get_current_user(request):
-    if not request.user.is_authenticated:
-        raise HttpError(401, "Not logged in")
-
-    return {
-        "id": request.user.id,
-        "username": request.user.username,
-        "email": request.user.email,
-        "first_name": request.user.first_name,
-        "last_name": request.user.last_name,
-        "bio": request.user.bio,
-        "profile_pic": request.user.profile_pic.url if request.user.profile_pic else None,
-        "is_traveler": request.user.is_traveler,
-        "is_host": request.user.is_host
-    }
+    if request.user.is_authenticated:
+        return {
+            "id": request.user.id,
+            "username": request.user.username,
+            "email": request.user.email,
+            "first_name": request.user.first_name,
+            "last_name": request.user.last_name,
+            "bio": request.user.bio,
+            "profile_pic": request.user.profile_pic.url if request.user.profile_pic else None,
+            "is_traveler": request.user.is_traveler,
+            "is_host": request.user.is_host
+        }
+    else:
+        return json_response({"Unauthorized": "Not Logged in"}, status=401)
+        #raise HttpError(401, "Not logged in")
 
 
 @router.post("/user/create")
@@ -225,6 +227,22 @@ def get_user_bookings(request):
 @router.get("/user/hosted_events")
 def get_user_events(request):
     return list(Event.objects.filter(host=request.user).values())
+
+
+@router.patch("/user/update")
+def update_user_profile(request):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Unauthorized")
+
+    data = json.loads(request.body.decode())
+
+    user = request.user
+    user.first_name = data.get("first_name", user.first_name)
+    user.last_name = data.get("last_name", user.last_name)
+    user.bio = data.get("bio", user.bio)
+
+    user.save()
+    return json_response({"message": "Profile updated successfully"})
 
 
 @router.get("/event/get_all", response=List[EventSchema])
