@@ -4,7 +4,7 @@ from django.contrib import auth
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.http import JsonResponse
 from django.conf import settings
-from ninja import Router, Schema, File
+from ninja import Router, Schema, File, Form
 from ninja.files import UploadedFile
 from pydantic import constr
 from .models import Event, Booking
@@ -229,20 +229,35 @@ def get_user_events(request):
     return list(Event.objects.filter(host=request.user).values())
 
 
-@router.patch("/user/update")
+from django.http import QueryDict
+
+@router.post("/user/update")
 def update_user_profile(request):
     if not request.user.is_authenticated:
         raise HttpError(401, "Unauthorized")
 
-    data = json.loads(request.body.decode())
+    post = request.POST
+    files = request.FILES
+
+    first_name = post.get("first_name")
+    last_name = post.get("last_name")
+    bio = post.get("bio")
+    profile_pic = files.get("profile_pic")
 
     user = request.user
-    user.first_name = data.get("first_name", user.first_name)
-    user.last_name = data.get("last_name", user.last_name)
-    user.bio = data.get("bio", user.bio)
+    if first_name:
+        user.first_name = first_name
+    if last_name:
+        user.last_name = last_name
+    if bio:
+        user.bio = bio
+    if profile_pic:
+        user.profile_pic.save(profile_pic.name, profile_pic.file, save=True)
 
     user.save()
     return json_response({"message": "Profile updated successfully"})
+
+
 
 
 @router.get("/event/get_all", response=List[EventSchema])

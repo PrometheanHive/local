@@ -30,10 +30,10 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-
-  const [firstName, setFirstName] = useState(user.first_name);
-  const [lastName, setLastName] = useState(user.last_name);
-  const [bio, setBio] = useState(user.bio || "");
+  const [firstName, setFirstName] = useState(user.first_name ?? "");
+  const [lastName, setLastName] = useState(user.last_name ?? "");
+  const [bio, setBio] = useState(user.bio ?? "");
+  const [newPic, setNewPic] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -59,23 +59,32 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   }, []);
 
   const handleUpdate = async () => {
-    const payload = {
-      first_name: firstName,
-      last_name: lastName,
-      bio: bio,
-    };
+    const formData = new FormData();
+  
+    if (firstName !== undefined) formData.append("first_name", firstName);
+    if (lastName !== undefined) formData.append("last_name", lastName);
+    if (bio !== undefined) formData.append("bio", bio);
+    if (newPic) formData.append("profile_pic", newPic);
+  
+    for (const [key, value] of formData.entries()) {
+      console.log(`FormData -> ${key}:`, value);
+    }
   
     try {
-      const response = await Api.instance.patch(`${API_BASE}/general/user/update`, payload, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(`${API_BASE}/general/user/update`, {
+        method: "POST",
+        body: formData,
+        credentials: "include", // replaces withCredentials
       });
-      console.log("Update response:", response.data);
+  
+      const data = await response.json();
+      console.log("Update response:", data);
       window.location.reload();
     } catch (error) {
       console.error("Failed to update profile:", error);
     }
   };
+  
   
 
   const handleDeleteEvent = async (eventId: number) => {
@@ -204,6 +213,19 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         <Modal opened={editModalOpen} onClose={() => setEditModalOpen(false)} title="Edit Profile">
           <TextInput label="First Name" value={firstName} onChange={(e) => setFirstName(e.currentTarget.value)} />
           <TextInput label="Last Name" value={lastName} onChange={(e) => setLastName(e.currentTarget.value)} />
+          <Stack gap="xs">
+            <Text size="sm" fw={500}>Upload Profile Picture</Text>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewPic(e.target.files?.[0] ?? null)}
+            />
+            {newPic && (
+              <Text size="xs" c="dimmed">
+                Selected: {newPic.name}
+              </Text>
+            )}
+          </Stack>
           <Textarea label="Bio" value={bio} onChange={(e) => setBio(e.currentTarget.value)} minRows={3} />
           <Button onClick={handleUpdate} mt="md">Save Changes</Button>
         </Modal>
