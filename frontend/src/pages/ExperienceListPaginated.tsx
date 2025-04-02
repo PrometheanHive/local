@@ -19,11 +19,15 @@ const exampleExperience: ExperienceData = {
     "https://media.gettyimages.com/id/165697561/photo/boulder-colorado-flatirons.jpg?s=612x612&w=0&k=20&c=_y_9TwcIFhnuNxfztZu-jZTkm2TEKjw1FXP-PDuX92o="
   ],
   host_first_name: "John",
+  host_last_name: "Doe", // <- Added
+  number_of_guests: 5,    // <- Added
+  number_of_bookings: 2,  // <- Added
   reviews: [
     { text: "This was an amazing experience!", rating: 5 },
     { text: "Highly recommend to anyone visiting the area.", rating: 4 }
   ]
 };
+
 
 export function ExperienceListPaginated() {
   const [experiences, setExperiences] = React.useState<ExperienceData[]>([exampleExperience]);

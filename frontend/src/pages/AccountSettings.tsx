@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Paper, Title, Text, Card, Button, Divider, Stack, Modal, Group } from '@mantine/core';
+import {
+  Container, Paper, Title, Text, Card, Button, Divider, Stack,
+  Modal, Group, TextInput, Textarea, Avatar
+} from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
 import { useNavigate } from 'react-router-dom';
-
-interface User {
-  username: string;
-  email: string;
-}
+import { User } from '@/types/UserTypes';
 
 interface Booking {
   id: number;
@@ -26,20 +25,15 @@ interface AccountSettingsProps {
 
 export function AccountSettings({ user }: AccountSettingsProps) {
   const navigate = useNavigate();
-
-  const [name, setName] = useState<string>(user?.username || "");
-  const [email, setEmail] = useState<string>(user?.email || "");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [yourEvents, setYourEvents] = useState<Event[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      setName(user.username || "");
-      setEmail(user.email || "");
-    }
-  }, [user]);
+  const [firstName, setFirstName] = useState(user.first_name ?? "");
+  const [lastName, setLastName] = useState(user.last_name ?? "");
+  const [bio, setBio] = useState(user.bio ?? "");
+  const [newPic, setNewPic] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -63,6 +57,35 @@ export function AccountSettings({ user }: AccountSettingsProps) {
     fetchBookings();
     fetchYourEvents();
   }, []);
+
+  const handleUpdate = async () => {
+    const formData = new FormData();
+  
+    if (firstName !== undefined) formData.append("first_name", firstName);
+    if (lastName !== undefined) formData.append("last_name", lastName);
+    if (bio !== undefined) formData.append("bio", bio);
+    if (newPic) formData.append("profile_pic", newPic);
+  
+    for (const [key, value] of formData.entries()) {
+      console.log(`FormData -> ${key}:`, value);
+    }
+  
+    try {
+      const response = await fetch(`${API_BASE}/general/user/update`, {
+        method: "POST",
+        body: formData,
+        credentials: "include", // replaces withCredentials
+      });
+  
+      const data = await response.json();
+      console.log("Update response:", data);
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    }
+  };
+  
+  
 
   const handleDeleteEvent = async (eventId: number) => {
     try {
@@ -102,9 +125,20 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         {/* Account Details */}
         <Card shadow="sm" p="lg">
           <Stack gap="sm">
-            <Title order={2}>Account details</Title>
-            <Text size="lg"><strong>Name:</strong> {name}</Text>
-            <Text size="lg"><strong>Email:</strong> {email}</Text>
+            <Group>
+              <Avatar
+                src={user.profile_pic || "/default-avatar.jpg"}
+                alt="Profile Picture"
+                size="xl"
+              />
+              <Stack>
+                <Text size="lg"><strong>Name:</strong> {user.first_name} {user.last_name}</Text>
+                <Text size="lg"><strong>Bio:</strong> {user.bio || '—'}</Text>
+                <Text size="lg"><strong>Traveler:</strong> {user.is_traveler ? 'Yes' : 'No'}</Text>
+                <Text size="lg"><strong>Host:</strong> {user.is_host ? 'Yes' : 'No'}</Text>
+              </Stack>
+            </Group>
+            <Button onClick={() => setEditModalOpen(true)}>Edit Profile</Button>
           </Stack>
         </Card>
 
@@ -174,6 +208,26 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         <Modal opened={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title="Confirm Deletion">
           <Text>Are you sure you want to delete "{selectedEvent?.title}"?</Text>
           <Button color="red" onClick={() => selectedEvent && handleDeleteEvent(selectedEvent.id)}>Yes, Delete</Button>
+        </Modal>
+
+        <Modal opened={editModalOpen} onClose={() => setEditModalOpen(false)} title="Edit Profile">
+          <TextInput label="First Name" value={firstName} onChange={(e) => setFirstName(e.currentTarget.value)} />
+          <TextInput label="Last Name" value={lastName} onChange={(e) => setLastName(e.currentTarget.value)} />
+          <Stack gap="xs">
+            <Text size="sm" fw={500}>Upload Profile Picture</Text>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewPic(e.target.files?.[0] ?? null)}
+            />
+            {newPic && (
+              <Text size="xs" c="dimmed">
+                Selected: {newPic.name}
+              </Text>
+            )}
+          </Stack>
+          <Textarea label="Bio" value={bio} onChange={(e) => setBio(e.currentTarget.value)} minRows={3} />
+          <Button onClick={handleUpdate} mt="md">Save Changes</Button>
         </Modal>
       </Paper>
     </Container>

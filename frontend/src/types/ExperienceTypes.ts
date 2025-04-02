@@ -8,11 +8,17 @@ export interface Review {
     title: string;
     description: string;
     unique_aspect: string;
-    price: number | string;
-    location: string;
-    photos: string[];
-    reviews: Review[];
     occurence_date: string;
+    location: string;
+    price: number | string;
+    photos: string[];
+    number_of_guests: number;
+    number_of_bookings: number;
+    reviews: Review[];
     host_first_name: string;
+    host_last_name: string;
+    host_profile_pic?: string;
+    host_id?: number;
   }
+  
   

@@ -96,10 +96,14 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
             <Grid.Col span={6}>
               <Card shadow="sm" p="lg">
                 <Group justify="space-between" align="center" style={{ width: "100%" }}>
-                  <Avatar src="https://demo.experiencebylocals.com/media/blankavatar.jpg" alt="Host photo" size="lg" />
-                  <div style={{ flex: 1, marginLeft: 20 }}>
-                    <Title order={3}>{experienceData.host_first_name}</Title>
-                  </div>
+                <Avatar 
+                  src={experienceData.host_profile_pic || "/default-avatar.jpg"} 
+                  alt={`${experienceData.host_first_name} ${experienceData.host_last_name}`} 
+                  size="lg" 
+                />
+                <Title order={3}>
+                  {experienceData.host_first_name} {experienceData.host_last_name}
+                </Title>
                 </Group>
               </Card>
             </Grid.Col>
