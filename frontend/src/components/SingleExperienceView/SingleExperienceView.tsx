@@ -119,7 +119,7 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
                     fullWidth
                     style={{ margin: "10px 0" }}
                   >
-                    Book Now for {new Date(experienceData.occurence_date).toLocaleDateString()} at{" "}
+                    RSVP for {new Date(experienceData.occurence_date).toLocaleDateString()} at{" "}
                     {new Date(experienceData.occurence_date).toLocaleTimeString([], { timeStyle: "short" })}
                   </Button>
                 </Stack>
