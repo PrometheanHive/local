@@ -124,8 +124,8 @@ export function SignUp() {
                             required
                             style={{ justifyContent: 'center', display: 'flex', flexDirection: 'row', gap: '20px' }}
                         >
-                            <Radio value="traveler" label="Traveler" />
-                            <Radio value="host" label="Host" />
+                            <Radio value="traveler" label="Explorer" />
+                            <Radio value="host" label="Creator" />
                             <Radio value="both" label="Both" />
                         </RadioGroup>
                     </Container>
