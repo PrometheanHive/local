@@ -26,9 +26,15 @@ export function NavigationBar() {
           {/* Links */}
           <Group gap="xs" style={{ flexWrap: 'wrap' }}>
             {user && (
-              <Link to="/create-experience" style={{ textDecoration: 'none', color: 'black' }}>
-                <Text fw={500} size="sm">Create Experience</Text>
-              </Link>
+              <>
+                <Link to="/create-experience" style={{ textDecoration: 'none', color: 'black' }}>
+                  <Text fw={500} size="sm">Create Experience</Text>
+                </Link>
+
+                <Link to="/messages" style={{ textDecoration: 'none', color: 'black' }}>
+                  <Text fw={500} size="sm">Messages</Text>
+                </Link>
+              </>
             )}
             <Link to="/sign-in" style={{ textDecoration: 'none', color: 'black' }}>
               <Text fw={500} size="sm">
@@ -42,8 +48,3 @@ export function NavigationBar() {
   );
 }
 
-{/* <Link style={{ textDecoration: 'none', color: 'black' }} to="/messages">
-                <Text fw={500} size="sm" lh={1} mr={3}>
-                  Messages
-                </Text>
-              </Link> */}
