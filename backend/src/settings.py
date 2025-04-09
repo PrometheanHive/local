@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-ys2%4h5a2p-d6+d_t+02k(kah1i+u_@x%u2dzz!@#v*+9a8&p)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"  # Use environment variable
-DEBUG = True
+DEBUG = False
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -61,18 +61,24 @@ SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevents MIME-type security risks
 SESSION_COOKIE_SECURE = True  # Ensures cookies are sent over HTTPS only
 CSRF_COOKIE_SECURE = True  # Ensures CSRF cookies are sent over HTTPS only
 SESSION_COOKIE_SAMESITE = "None"  # Needed for cross-site requests
+CSRF_COOKIE_SAMESITE = "None"
 
-ALLOWED_HOSTS = [
-    "0.0.0.0",
-    "127.0.0.1",
-    "localhost",
-    "backend_locale",  # Ensure this matches the Docker service name
-    "nginx",  # If Nginx is forwarding requests
-    DOMAIN  # Ensure this includes your external domain
-]
+# Dynamically load allowed hosts and trusted origins from env
+ALLOWED_HOSTS = os.getenv(
+    "DJANGO_ALLOWED_HOSTS",
+    f"{DOMAIN},localhost,127.0.0.1,backend_locale,nginx"
+).split(",")
 
 
+default_origins = f"https://{DOMAIN},http://{DOMAIN},https://localhost,http://localhost,https://0.0.0.0,http://0.0.0.0"
 
+CORS_ALLOWED_ORIGINS = os.getenv("DJANGO_CORS_ALLOWED_ORIGINS", default_origins).split(",")
+CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", default_origins).split(",")
+
+
+print("🌐 ALLOWED_HOSTS =", ALLOWED_HOSTS)
+print("🛡️ CORS_ALLOWED_ORIGINS =", CORS_ALLOWED_ORIGINS)
+print("🛡️ CSRF_TRUSTED_ORIGINS =", CSRF_TRUSTED_ORIGINS)
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
@@ -189,25 +195,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #cors stuff
 
-# For local testing flexibility, you can still include localhost entries
-CORS_ORIGIN_WHITELIST = [
-    'https://localhost',
-    'http://localhost',
-    'https://0.0.0.0',
-    'http://0.0.0.0',
-    f'https://{DOMAIN}',
-    f'http://{DOMAIN}',  # Optional fallback for dev tools
-]
-
-CORS_ALLOWED_ORIGINS = CORS_ORIGIN_WHITELIST  # You can alias it if same list applies
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://localhost',
-    'http://localhost',
-    'https://0.0.0.0',
-    'http://0.0.0.0',
-    f'https://{DOMAIN}',
-]
 
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 CORS_ALLOW_HEADERS = [

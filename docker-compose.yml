@@ -42,10 +42,10 @@ services:
     mem_reservation: 256m
     depends_on:
       - db
+    env_file:
+      - .env
     environment:
       - DOCKER=true
-      - DJANGO_ALLOWED_HOSTS=$DOMAIN localhost backend_locale nginx
-      - DJANGO_CSRF_TRUSTED_ORIGINS=https://${DOMAIN}
     networks:
       - web_network
 
