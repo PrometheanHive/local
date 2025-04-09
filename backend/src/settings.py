@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
+DOMAIN = os.getenv("DOMAIN", "localhost")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 #BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -65,7 +68,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "backend_locale",  # Ensure this matches the Docker service name
     "nginx",  # If Nginx is forwarding requests
-    "demo.experiencebylocals.com"  # Ensure this includes your external domain
+    DOMAIN  # Ensure this includes your external domain
 ]
 
 
@@ -186,29 +189,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #cors stuff
 
+# For local testing flexibility, you can still include localhost entries
 CORS_ORIGIN_WHITELIST = [
     'https://localhost',
-    'https://0.0.0.0',
     'http://localhost',
-    'http://0.0.0.0',
-    "https://demo.experiencebylocals.com"
-]
-
-CORS_ALLOWED_ORIGINS = [
-    'https://localhost',
     'https://0.0.0.0',
-    "http://localhost",
     'http://0.0.0.0',
-    "https://demo.experiencebylocals.com"
-
+    f'https://{DOMAIN}',
+    f'http://{DOMAIN}',  # Optional fallback for dev tools
 ]
+
+CORS_ALLOWED_ORIGINS = CORS_ORIGIN_WHITELIST  # You can alias it if same list applies
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://localhost",
-    "http://localhost",
-    "https://0.0.0.0",
-    "http://0.0.0.0",
-    "https://demo.experiencebylocals.com"
+    'https://localhost',
+    'http://localhost',
+    'https://0.0.0.0',
+    'http://0.0.0.0',
+    f'https://{DOMAIN}',
 ]
 
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
