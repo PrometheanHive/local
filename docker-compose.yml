@@ -44,8 +44,8 @@ services:
       - db
     environment:
       - DOCKER=true
-      - DJANGO_ALLOWED_HOSTS=demo.experiencebylocals.com localhost backend_locale nginx
-      - DJANGO_CSRF_TRUSTED_ORIGINS=https://demo.experiencebylocals.com
+      - DJANGO_ALLOWED_HOSTS=$DOMAIN localhost backend_locale nginx
+      - DJANGO_CSRF_TRUSTED_ORIGINS=https://${DOMAIN}
     networks:
       - web_network
 
@@ -78,6 +78,9 @@ services:
       - frontend_build:/usr/share/nginx/html:ro  # Mount built frontend files from frontend container
       - backend_static:/backend/static:ro
       - /mnt/volume/uploads/:/mnt/volume/uploads/:ro 
+    entrypoint: ["/bin/sh", "/docker-entrypoint.sh"]
+    environment:
+    - DOMAIN=${DOMAIN}
     depends_on:
       - frontend
       - backend
