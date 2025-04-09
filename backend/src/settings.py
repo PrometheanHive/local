@@ -75,11 +75,6 @@ default_origins = f"https://{DOMAIN},http://{DOMAIN},https://localhost,http://lo
 CORS_ALLOWED_ORIGINS = os.getenv("DJANGO_CORS_ALLOWED_ORIGINS", default_origins).split(",")
 CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", default_origins).split(",")
 
-
-print("🌐 ALLOWED_HOSTS =", ALLOWED_HOSTS)
-print("🛡️ CORS_ALLOWED_ORIGINS =", CORS_ALLOWED_ORIGINS)
-print("🛡️ CSRF_TRUSTED_ORIGINS =", CSRF_TRUSTED_ORIGINS)
-
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
 CORS_ALLOW_HEADERS = ["*"]
