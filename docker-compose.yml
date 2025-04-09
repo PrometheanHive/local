@@ -73,7 +73,6 @@ services:
     ports:
       - "80:80"
     volumes:
-
       - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - frontend_build:/usr/share/nginx/html:ro
       - backend_static:/backend/static:ro
