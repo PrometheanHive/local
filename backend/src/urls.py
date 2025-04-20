@@ -19,6 +19,7 @@ from django.urls import include, path
 from .api import api
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import test_email_view
 
 urlpatterns = [
 
@@ -28,6 +29,8 @@ urlpatterns = [
 
     #admin
     path('admin/', admin.site.urls),
+
+    path("test-email/", test_email_view),
 
     #auth
     path('accounts/', include('django.contrib.auth.urls')),
