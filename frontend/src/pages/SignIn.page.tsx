@@ -94,6 +94,9 @@ export function SignIn() {
                             <Link to="/sign-up">Sign Up</Link>
                         </Text>
                     </Container>
+                    <Text size="sm" mt="sm">
+                    <a href="/password-reset/">Forgot your password?</a>
+                    </Text>
                 </form>
             </Paper>
         </Container>

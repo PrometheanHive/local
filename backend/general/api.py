@@ -13,7 +13,7 @@ from datetime import datetime
 from . import models
 from django.shortcuts import get_object_or_404
 import json
-
+from django.core.mail import send_mail
 
 
 router = Router()
@@ -166,6 +166,20 @@ def create_user(request):
     user.is_traveler = data.get("role") in ["traveler", "both"]
     user.is_host = data.get("role") in ["host", "both"]
     user.save()
+
+    send_mail(
+    subject="Welcome to Local!",
+    message=(
+        f"Hi {user.first_name},\n\n"
+        "Welcome to Local — we're excited to help you experience real culture wherever you travel.\n\n"
+        "You can log in anytime at https://dev.experiencebylocals.com/sign-in\n\n"
+        "Have questions or ideas? Just email us anytime at support@experiencebylocals.com.\n\n"
+        "Cheers,\nThe Local Team"
+    ),
+    from_email=None,  # Uses DEFAULT_FROM_EMAIL from settings
+    recipient_list=[user.email],
+    fail_silently=False
+)
 
     return json_response({"message": "User created", "user_id": user.id})
 

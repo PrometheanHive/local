@@ -19,6 +19,8 @@ from django.urls import include, path
 from .api import api
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import test_email_view
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
 
@@ -29,10 +31,15 @@ urlpatterns = [
     #admin
     path('admin/', admin.site.urls),
 
+    path("test-email/", test_email_view),
+
     #auth
     path('accounts/', include('django.contrib.auth.urls')),
 
-    #general
+    path('password-reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
+    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete')
 ]
 # Serve uploaded files via Django (only works in development)
 if settings.DEBUG:
