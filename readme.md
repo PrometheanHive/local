@@ -15,7 +15,12 @@
 
     sudo docker compose run backend python3.11 manage.py migrate
     ```
-
+```
+curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+sudo yum install -y nodejs
+cd frontend
+npm install
+```
 
 # How things Work
 To start everything up, run

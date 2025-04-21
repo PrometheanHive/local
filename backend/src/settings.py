@@ -14,6 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
+
 DOMAIN = os.getenv("DOMAIN", "localhost")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -116,7 +117,7 @@ ROOT_URLCONF = 'src.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'general/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

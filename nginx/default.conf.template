@@ -41,6 +41,17 @@ server {
         return 200 '{"status": "ok"}';
     }
 
+    location /password-reset/ {
+        proxy_pass http://backend:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /reset/ {
+        proxy_pass http://backend:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
     location /test-email/ {
         proxy_pass http://backend:5000;
         proxy_set_header Host $host;
