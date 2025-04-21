@@ -7,8 +7,16 @@ import logo from '../images/logo_square.png';
 
 interface User {
   username: string;
-  image?: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  bio?: string;
+  profile_pic?: string;
+  is_traveler: boolean;
+  is_host: boolean;
+  image?: string; // Optional: if used elsewhere in your app
 }
+
 
 export function NavigationBar() {
   const [opened, { toggle }] = useDisclosure(false);
@@ -32,7 +40,7 @@ export function NavigationBar() {
             )}
             <Link to="/sign-in" style={{ textDecoration: 'none', color: 'black' }}>
               <Text fw={500} size="sm">
-                {user ? `Welcome ${user.username}` : 'Please sign in'}
+                {user ? `Welcome ${user.first_name || user.username}` : 'Please sign in'}
               </Text>
             </Link>
           </Group>
