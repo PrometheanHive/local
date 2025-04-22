@@ -75,7 +75,6 @@ export function ViewHostProfile() {
                     <Title order={4}>{event.title}</Title>
                     <Text>{new Date(event.occurence_date).toLocaleDateString()}</Text>
                     <Text c="dimmed" size="sm">{event.location}</Text>
-                    <Text size="sm">Bookings: {event.number_of_bookings}</Text>
                   </div>
                   {event.photos && event.photos.length > 0 && (
                     <Avatar src={event.photos[0]} size={80} radius="md" />
