@@ -444,3 +444,23 @@ def get_user_by_id(request, user_id: int):
         }
     except UserModel.DoesNotExist:
         raise HttpError(404, "User not found")
+
+@router.get("/host/{host_id}/events")
+def get_events_by_host_id(request, host_id: int):
+    try:
+        user = get_user_model().objects.get(id=host_id, is_host=True)
+    except UserModel.DoesNotExist:
+        raise HttpError(404, "Host not found")
+
+    events = Event.objects.filter(host=user)
+    return [
+        {
+            "id": event.id,
+            "title": event.title,
+            "occurence_date": str(event.occurence_date),
+            "location": event.location,
+            "number_of_bookings": event.number_of_bookings,
+            "photos": event.photos or [],
+        }
+        for event in events
+    ]
