@@ -45,7 +45,7 @@ const router = createBrowserRouter([
       { path: '/experience/:id', element: <SingleExperiencePage /> },
       { path: '/account-settings', element: <ProtectedRoute Component={AccountSettings} /> },
       { path: '/account-settings-host', element: <ProtectedRoute Component={AccountSettingsHost} /> },
-      { path: '/view-host-profile', element: <ViewHostProfile /> },
+      { path: '/host/:hostId', element: <ViewHostProfile /> },
       { path: '/traveler-experience-registration', element: <ExperienceRegistration /> },
       { path: '/view-user-profile', element: <ViewUserProfile /> },
     ],

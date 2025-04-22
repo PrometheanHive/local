@@ -19,6 +19,7 @@ import {
   Modal,
   Textarea,
 } from "@mantine/core";
+import { Link } from 'react-router-dom';
 
 interface SingleExperienceViewProps {
   experienceData: ExperienceData;
@@ -95,16 +96,18 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
           <Grid>
             <Grid.Col span={6}>
               <Card shadow="sm" p="lg">
-                <Group justify="space-between" align="center" style={{ width: "100%" }}>
-                <Avatar 
-                  src={experienceData.host_profile_pic || "/default-avatar.jpg"} 
-                  alt={`${experienceData.host_first_name} ${experienceData.host_last_name}`} 
-                  size="lg" 
-                />
-                <Title order={3}>
-                  {experienceData.host_first_name} {experienceData.host_last_name}
-                </Title>
-                </Group>
+                <Link to={`/host/${experienceData.host_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <Group justify="space-between" align="center" style={{ width: '100%' }}>
+                    <Avatar 
+                      src={experienceData.host_profile_pic || "/default-avatar.jpg"} 
+                      alt={`${experienceData.host_first_name} ${experienceData.host_last_name}`} 
+                      size="lg" 
+                    />
+                    <Title order={3}>
+                      {experienceData.host_first_name} {experienceData.host_last_name}
+                    </Title>
+                  </Group>
+                </Link>
               </Card>
             </Grid.Col>
 

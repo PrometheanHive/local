@@ -427,3 +427,40 @@ def delete_event(request, event_id: int):
 
     event.delete()
     return {"success": True, "message": "Event deleted successfully"}
+
+@router.get("/user/{user_id}")
+def get_user_by_id(request, user_id: int):
+    try:
+        user = get_user_model().objects.get(id=user_id)
+        return {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "bio": user.bio,
+            "profile_pic": user.profile_pic.url if user.profile_pic else None,
+            "is_host": user.is_host,
+            "is_traveler": user.is_traveler,
+            "email": user.email
+        }
+    except UserModel.DoesNotExist:
+        raise HttpError(404, "User not found")
+
+@router.get("/host/{host_id}/events")
+def get_events_by_host_id(request, host_id: int):
+    try:
+        user = get_user_model().objects.get(id=host_id, is_host=True)
+    except UserModel.DoesNotExist:
+        raise HttpError(404, "Host not found")
+
+    events = Event.objects.filter(host=user)
+    return [
+        {
+            "id": event.id,
+            "title": event.title,
+            "occurence_date": str(event.occurence_date),
+            "location": event.location,
+            "number_of_bookings": event.number_of_bookings,
+            "photos": event.photos or [],
+        }
+        for event in events
+    ]

@@ -7,17 +7,22 @@ import Api, { API_BASE } from '@/api/API';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@/types/UserTypes';
 
+
 interface Booking {
   id: number;
+  event_id: number;
   event_title: string;
   event_date: string;
 }
+
 
 interface Event {
   id: number;
   title: string;
   number_of_bookings: number;
+  photos?: string[];
 }
+
 
 interface AccountSettingsProps {
   user: User;
@@ -34,7 +39,6 @@ export function AccountSettings({ user }: AccountSettingsProps) {
   const [lastName, setLastName] = useState(user.last_name ?? "");
   const [bio, setBio] = useState(user.bio ?? "");
   const [newPic, setNewPic] = useState<File | null>(null);
-
   useEffect(() => {
     const fetchBookings = async () => {
       try {
@@ -150,18 +154,34 @@ export function AccountSettings({ user }: AccountSettingsProps) {
             <Title order={2}>Your Bookings</Title>
             {bookings.length > 0 ? (
               bookings.map((booking: Booking) => (
-                <Group key={booking.id} justify="space-between">
-                  <Text>
-                    <strong>{booking.event_title}</strong> – {new Date(booking.event_date).toLocaleDateString()}
-                  </Text>
-                  <Button
-                    color="red"
-                    size="xs"
-                    onClick={() => handleDeleteBooking(booking.id)}
-                  >
-                    Cancel
-                  </Button>
-                </Group>
+                <Card 
+                  key={booking.id} 
+                  shadow="xs" 
+                  p="md" 
+                  withBorder
+                >
+                  <Group justify="space-between" align="center">
+                    {/* Clickable info block */}
+                    <div
+                      style={{ cursor: 'pointer', flex: 1 }}
+                      onClick={() => navigate(`/experience/${booking.event_id}`)}
+                    >
+                      <Text fw={600}>{booking.event_title}</Text>
+                      <Text size="sm" c="dimmed">
+                        {new Date(booking.event_date).toLocaleDateString()}
+                      </Text>
+                    </div>
+
+                    {/* Cancel Booking */}
+                    <Button
+                      color="red"
+                      size="xs"
+                      onClick={() => handleDeleteBooking(booking.id)}
+                    >
+                      Cancel
+                    </Button>
+                  </Group>
+                </Card>
               ))
             ) : (
               <Text c="dimmed">No bookings found.</Text>
@@ -175,14 +195,49 @@ export function AccountSettings({ user }: AccountSettingsProps) {
         <Card shadow="sm">
           <Stack gap="sm">
             <Title order={2}>Your Events</Title>
-            {yourEvents.map(event => (
-              <Card key={event.id} shadow="xs" p="md">
-                <Text><strong>{event.title}</strong> - {event.number_of_bookings} bookings</Text>
-                <Button color="red" size="xs" onClick={() => { setSelectedEvent(event); setDeleteModalOpen(true); }}>Delete</Button>
-              </Card>
-            ))}
+            {yourEvents.length === 0 ? (
+              <Text c="dimmed">No events created yet.</Text>
+            ) : (
+              yourEvents.map(event => (
+                <Card
+                  key={event.id}
+                  shadow="xs"
+                  p="md"
+                  withBorder
+                >
+                  <Group justify="space-between" align="center">
+                    <div 
+                      style={{ cursor: 'pointer', flex: 1 }}
+                      onClick={() => navigate(`/experience/${event.id}`)}
+                    >
+                      <Text fw={600}>{event.title}</Text>
+                      <Text size="sm">Bookings: {event.number_of_bookings}</Text>
+                    </div>
+
+                    {event.photos?.[0] ? (
+                      <Avatar src={event.photos[0]} size={60} radius="md" />
+                    ) : (
+                      <Avatar src="/default-avatar.jpg" size={60} radius="md" />
+                    )}
+
+                    <Button
+                      color="red"
+                      size="xs"
+                      onClick={() => {
+                        setSelectedEvent(event);
+                        setDeleteModalOpen(true);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </Group>
+                </Card>
+              ))
+            )}
           </Stack>
         </Card>
+
+
 
         <Divider my="lg" />
 

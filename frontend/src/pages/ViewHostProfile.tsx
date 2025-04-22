@@ -1,44 +1,90 @@
-import React from 'react';
-import { Container, Card, Group, Avatar, Rating, Title, Text, Divider } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Container, Card, Group, Avatar, Rating, Title, Text, Divider, Loader, Center } from '@mantine/core';
+import Api, { API_BASE } from '@/api/API';
+import { useNavigate } from "react-router-dom";
 
 export function ViewHostProfile() {
-    const host = {
-        name: "John Doe",
-        description: "Hi, I'm John! I have been hosting adventure experiences for over 10 years and love sharing my passion for the outdoors. I have been on many adventures over the years, and I would love for you to join me!",
-        photo: "https://via.placeholder.com/150", // Replace with an actual image URL
-    };
-
+    const { hostId } = useParams();
+    const navigate = useNavigate();
+  
+    const [host, setHost] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [hostEvents, setHostEvents] = useState<any[]>([]);
+  
+    useEffect(() => {
+      async function fetchHost() {
+        try {
+          const res = await Api.instance.get(`${API_BASE}/general/user/${hostId}`);
+          setHost(res.data);
+        } catch (err) {
+          console.error("Failed to fetch host profile:", err);
+        } finally {
+          setLoading(false);
+        }
+      }
+  
+      fetchHost();
+    }, [hostId]);
+  
+    useEffect(() => {
+      async function fetchHostEvents() {
+        try {
+          const res = await Api.instance.get(`${API_BASE}/general/host/${hostId}/events`);
+          setHostEvents(res.data);
+        } catch (err) {
+          console.error("Failed to fetch host events:", err);
+        }
+      }
+  
+      fetchHostEvents();
+    }, [hostId]);
+  
+    if (loading) return <Center><Loader /></Center>;
+    if (!host) return <Text>Host not found</Text>;
+  
     return (
-        <Container my={40}>
-            <Title order={1} mb="lg">{host.name} Profile</Title>
-
-            <Card shadow="sm" p="lg">
-                <Group justify="space-between" align="center" style={{ width: '100%' }}>
-                    <Avatar src={host.photo} alt="Host photo" size="xl" />
-                    <div style={{ flex: 1, marginLeft: 20 }}>
-                        <Text>{host.description}</Text>
-                    </div>
+      <Container my={40}>
+        <Title order={1}>{`${host.first_name} ${host.last_name}`}</Title>
+        <Card shadow="sm" p="lg">
+          <Group>
+            <Avatar src={host.profile_pic} size="xl" />
+            <Text>{host.bio}</Text>
+          </Group>
+        </Card>
+  
+        <Divider my="lg" />
+  
+        {/* Experiences by this host */}
+        <Card shadow="sm" p="lg">
+          <Title order={2}>Experiences by {host.first_name}</Title>
+          {hostEvents.length === 0 ? (
+            <Text>This host has not published any experiences yet.</Text>
+          ) : (
+            hostEvents.map(event => (
+              <Card 
+                key={event.id} 
+                withBorder 
+                shadow="xs" 
+                my="sm" 
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate(`/experience/${event.id}`)}
+              >
+                <Group justify="space-between">
+                  <div>
+                    <Title order={4}>{event.title}</Title>
+                    <Text>{new Date(event.occurence_date).toLocaleDateString()}</Text>
+                    <Text c="dimmed" size="sm">{event.location}</Text>
+                  </div>
+                  {event.photos && event.photos.length > 0 && (
+                    <Avatar src={event.photos[0]} size={80} radius="md" />
+                  )}
                 </Group>
-            </Card>
-
-            <Divider my="lg" />
-
-            <Card shadow="sm" p="lg">
-                <Title order={2}>Local Score</Title>
-                <Rating value={5} readOnly />
-            </Card>
-
-            <Divider my="lg" />
-
-            <Card shadow="sm" p="lg">
-                <Title order={2}>Reviews</Title>
-                <Rating value={4} readOnly />
-                <Text>I loved John, it was a great hike with him!</Text>
-                <Rating value={5} readOnly />
-                <Text>John showed us a hidden cave on the hike that was amazing! Great personality, would really recommend him.</Text>
-                <Rating value={5} readOnly />
-                <Text>If you want a thrilling adventure in the outdoors, then John is your guy!</Text>
-            </Card>
-        </Container>
+              </Card>
+            ))
+          )}
+        </Card>
+      </Container>
     );
-}
+  }
+  

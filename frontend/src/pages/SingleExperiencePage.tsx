@@ -4,6 +4,7 @@ import { Divider, Loader, Center, Text } from "@mantine/core";
 import Api, { API_BASE } from "@/api/API";
 import { useParams } from "react-router-dom";
 import { ExperienceData, Review } from "@/types/ExperienceTypes"; // Import shared types
+import { Link } from 'react-router-dom';
 
 export function SingleExperiencePage() {
   const [experience, setExperience] = React.useState<ExperienceData | null>(null);
