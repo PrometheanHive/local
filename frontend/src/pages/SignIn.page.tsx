@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Container, Paper, Title, Text, TextInput, PasswordInput, Button } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
-//import { CometChatUIKit } from "@cometchat/chat-uikit-react";
+import { CometChatUIKit } from "@cometchat/chat-uikit-react";
 import { AccountSettings } from './AccountSettings';
 
 export function SignIn() {
@@ -26,17 +26,17 @@ export function SignIn() {
             if (response.data && response.data.user_id) {
                 setUser(response.data.user_id);
 
-                // CometChatUIKit.getLoggedinUser().then((user) => {
-                //     if (!user) {
-                //         const cometChatLogin = email.replace(/[@.]/g, '');
-                //         CometChatUIKit.login(cometChatLogin)
-                //             .then((user) => console.log("Login Successful:", { user }))
-                //             .catch((error) => {
-                //                 console.error("CometChat login failed:", error);
-                //                 setError("Incorrect username/password");
-                //             });
-                //     }
-                // });
+                CometChatUIKit.getLoggedinUser().then((user) => {
+                    if (!user) {
+                        const cometChatLogin = email.replace(/[@.]/g, '');
+                        CometChatUIKit.login(cometChatLogin)
+                            .then((user) => console.log("Login Successful:", { user }))
+                            .catch((error) => {
+                                console.error("CometChat login failed:", error);
+                                setError("Incorrect username/password");
+                            });
+                    }
+                });
 
                 // Redirect to homepage and refresh to reflect login state
                 window.location.href = '/';

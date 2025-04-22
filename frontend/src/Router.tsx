@@ -16,7 +16,7 @@ import { AccountSettingsHost } from './pages/AccountSettingsHost';
 import { ViewHostProfile } from './pages/ViewHostProfile';
 import { ViewUserProfile } from './pages/ViewUserProfile'; // Ensure proper casing
 import { ExperienceRegistration } from './pages/ExperienceRegistration.page';
-//import { MessagesPage } from './pages/MessagesPage';
+import { MessagesPage } from './pages/MessagesPage';
 
 // Ensure the user is passed properly using a wrapper component
 function ProtectedRoute({ Component }: { Component: React.FC<{ user: any }> }) {
@@ -48,6 +48,7 @@ const router = createBrowserRouter([
       { path: '/host/:hostId', element: <ViewHostProfile /> },
       { path: '/traveler-experience-registration', element: <ExperienceRegistration /> },
       { path: '/view-user-profile', element: <ViewUserProfile /> },
+      {path: '/messages', element: <MessagesPage/>}      
     ],
   },
 ]);

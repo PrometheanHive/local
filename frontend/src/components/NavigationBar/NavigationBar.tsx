@@ -31,6 +31,11 @@ export function NavigationBar() {
           <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>
             <img src={logo} alt="Logo" style={{ height: '60px', marginRight: '10px' }} />
           </Link>
+          {user && (
+              <Link to="/messages" style={{ textDecoration: 'none', color: 'black' }}>
+                <Text fw={500} size="sm">Messages</Text>
+              </Link>
+            )}
           {/* Links */}
           <Group gap="xs" style={{ flexWrap: 'wrap' }}>
             {user && (
