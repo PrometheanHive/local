@@ -6,7 +6,7 @@ import {
 import Api, { API_BASE } from '@/api/API';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@/types/UserTypes';
-
+import { CometChat } from "@cometchat/chat-sdk-javascript"; 
 
 interface Booking {
   id: number;
@@ -112,9 +112,25 @@ export function AccountSettings({ user }: AccountSettingsProps) {
     }
   };
 
+
+
   const handleLogout = async () => {
     try {
+      const cometChatUser = await CometChat.getLoggedinUser();
+      if (cometChatUser) {
+        try {
+          await CometChat.logout();
+          console.log("✅ CometChat logout successful");
+        } catch (ccLogoutError) {
+          console.warn("⚠️ CometChat logout failed or user not logged in:", ccLogoutError);
+        }
+      } else {
+        console.log("ℹ️ No CometChat user logged in");
+      }
+  
+      // Now log out from Django
       await Api.instance.post(`${API_BASE}/general/user/logout`, {}, { withCredentials: true });
+  
       window.location.href = '/';
     } catch (error) {
       console.error("Logout failed:", error);
