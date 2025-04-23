@@ -8,6 +8,19 @@ interface AuthContextType {
   isLoading: boolean;
 }
 
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  bio?: string;
+  profile_pic?: string;
+  is_traveler: boolean;
+  is_host: boolean;
+}
+
+
 // Create the AuthContext with a default value
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -27,7 +40,7 @@ interface AuthProviderProps {
 
 // AuthProvider Component
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -43,8 +56,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('Error fetching user data:', error);
         setUser(null); // Ensures failed requests don't break navigation bar
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchUser();
