@@ -14,6 +14,8 @@ from . import models
 from django.shortcuts import get_object_or_404
 import json
 from django.core.mail import send_mail
+from django.db.models import Q
+
 
 router = Router()
 UserModel = auth.get_user_model()
@@ -491,8 +493,9 @@ def get_allowed_dms(request):
 
     try:
         dms = AllowedDM.objects.filter(
-            models.Q(user1=request.user) | models.Q(user2=request.user)
-        ).select_related("user1", "user2")
+            Q(user1=request.user) | Q(user2=request.user)
+        )
+
 
         uids = []
 
