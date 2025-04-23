@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Event, Booking, Review, EventTags
+from .models import CustomUser, Event, Booking, Review, EventTags, AllowedDM
+
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
@@ -18,4 +19,4 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ("email", "username", "first_name", "last_name")
 
 # Register other models
-admin.site.register([Event, Booking, Review, EventTags])
+admin.site.register([Event, Booking, Review, EventTags, AllowedDM])

@@ -4,9 +4,9 @@ import { AuthProvider } from './auth/AuthProvider';
 import { CometChatUIKit, UIKitSettingsBuilder } from "@cometchat/chat-uikit-react";
 
 const COMETCHAT_CONSTANTS = {
-  APP_ID: "254033c3e0be6dd7", //Replace with your App ID
-  REGION: "US", //Replace with your App Region
-  AUTH_KEY: "f668b6beca8d497ea2d81d30360e412e1ebb9244" //Replace with your Auth Key
+  APP_ID: "254033c3e0be6dd7",
+  REGION: "US",
+  AUTH_KEY: "f668b6beca8d497ea2d81d30360e412e1ebb9244"
 }
 
 //create the builder

@@ -7,7 +7,7 @@ from django.conf import settings
 from ninja import Router, Schema, File, Form
 from ninja.files import UploadedFile
 from pydantic import constr
-from .models import Event, Booking
+from .models import Event, Booking, AllowedDM
 from ninja.errors import HttpError
 from datetime import datetime
 from . import models
@@ -90,6 +90,8 @@ class ReviewCreateSchema(Schema):
 class PhotoUpdateSchema(Schema):
     photos: List[str]
 
+class StartDMSchema(Schema):
+    target_user_id: int
 
 ### File Upload API
 @router.post("/upload")
@@ -464,3 +466,24 @@ def get_events_by_host_id(request, host_id: int):
         }
         for event in events
     ]
+
+@router.post("/messaging/start-dm")
+def start_dm(request, payload: StartDMSchema):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Unauthorized")
+
+    try:
+        target = get_user_model().objects.get(id=payload.target_user_id)
+    except:
+        raise HttpError(404, "User not found")
+
+    AllowedDM.objects.get_or_create(user=request.user, target_user=target)
+    return json_response({"message": f"DM access granted to {target.username}"})
+
+@router.get("/messaging/allowed-uids")
+def get_allowed_dms(request):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Unauthorized")
+
+    allowed = AllowedDM.objects.filter(user=request.user).select_related("target_user")
+    return [dm.target_user.username.replace("@", "").replace(".", "") for dm in allowed]

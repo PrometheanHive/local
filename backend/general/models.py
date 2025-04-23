@@ -71,10 +71,13 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
 
+class AllowedDM(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="allowed_to_message", on_delete=models.CASCADE)
+    target_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="allowed_by", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-# class UserProfile(models.Model):
-#     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
-#     bio = models.TextField(blank=True, null=True)
-#     profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-#     is_traveler = models.BooleanField(default=False)
-#     is_host = models.BooleanField(default=False)
+    class Meta:
+        unique_together = ('user', 'target_user')
+
+    def __str__(self):
+        return f"{self.user.username} → {self.target_user.username}"
