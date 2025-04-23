@@ -15,7 +15,6 @@ from django.shortcuts import get_object_or_404
 import json
 from django.core.mail import send_mail
 
-
 router = Router()
 UserModel = auth.get_user_model()
 
@@ -490,11 +489,25 @@ def get_allowed_dms(request):
     if not request.user.is_authenticated:
         raise HttpError(401, "Unauthorized")
 
-    dms = AllowedDM.objects.filter(models.Q(user1=request.user) | models.Q(user2=request.user))
+    try:
+        dms = AllowedDM.objects.filter(
+            models.Q(user1=request.user) | models.Q(user2=request.user)
+        ).select_related("user1", "user2")
 
-    # Return the UID of the other person in each DM pair
-    def to_uid(dm):
-        other = dm.user2 if dm.user1 == request.user else dm.user1
-        return other.username.replace("@", "").replace(".", "")
+        uids = []
 
-    return [to_uid(dm) for dm in dms]
+        for dm in dms:
+            try:
+                other = dm.user2 if dm.user1 == request.user else dm.user1
+                uid = other.username.replace("@", "").replace(".", "")
+                uids.append(uid)
+            except Exception as e:
+                print(f"⚠️ Error processing AllowedDM ID={dm.id}: {e}")
+
+        return uids
+
+    except Exception as outer_error:
+        import traceback
+        print("🔥 Critical error in get_allowed_dms API:")
+        print(traceback.format_exc())
+        raise HttpError(500, "Server failed to retrieve allowed users")
