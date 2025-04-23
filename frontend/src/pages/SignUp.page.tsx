@@ -10,7 +10,7 @@ import { useAuth } from '../auth/AuthProvider';
 
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { CometChatUIKit } from "@cometchat/chat-uikit-react";
-
+import { initializeCometChat } from "@/services/cometchatService";
 export function SignUp() {
   const [email, setEmail] = useState<string>("");
   const [firstName, setFirstName] = useState<string>("");
@@ -53,7 +53,7 @@ export function SignUp() {
 
       if (loginResponse.data && loginResponse.data.user_id) {
         setUser(loginResponse.data.user_id);
-
+        await initializeCometChat();
         const cometChatLogin = email.replace(/[@.]/g, '');
         const chatUser = new CometChat.User(cometChatLogin);
         chatUser.setName(`${firstName} ${lastName}`);
