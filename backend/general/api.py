@@ -477,13 +477,24 @@ def start_dm(request, payload: StartDMSchema):
     except:
         raise HttpError(404, "User not found")
 
-    AllowedDM.objects.get_or_create(user=request.user, target_user=target)
-    return json_response({"message": f"DM access granted to {target.username}"})
+    # Determine ordering
+    user1, user2 = sorted([request.user, target], key=lambda u: u.id)
+
+    # Create symmetric DM
+    AllowedDM.objects.get_or_create(user1=user1, user2=user2)
+
+    return json_response({"message": f"Mutual DM access granted between {user1.username} and {user2.username}"})
 
 @router.get("/messaging/allowed-uids")
 def get_allowed_dms(request):
     if not request.user.is_authenticated:
         raise HttpError(401, "Unauthorized")
 
-    allowed = AllowedDM.objects.filter(user=request.user).select_related("target_user")
-    return [dm.target_user.username.replace("@", "").replace(".", "") for dm in allowed]
+    dms = AllowedDM.objects.filter(models.Q(user1=request.user) | models.Q(user2=request.user))
+
+    # Return the UID of the other person in each DM pair
+    def to_uid(dm):
+        other = dm.user2 if dm.user1 == request.user else dm.user1
+        return other.username.replace("@", "").replace(".", "")
+
+    return [to_uid(dm) for dm in dms]

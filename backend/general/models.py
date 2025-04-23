@@ -72,12 +72,19 @@ class CustomUser(AbstractUser):
         return f"{self.first_name} {self.last_name} ({self.email})"
 
 class AllowedDM(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="allowed_to_message", on_delete=models.CASCADE)
-    target_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="allowed_by", on_delete=models.CASCADE)
+    user1 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='dm_user1')
+    user2 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='dm_user2')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'target_user')
+        unique_together = (('user1', 'user2'),)
+
+    def save(self, *args, **kwargs):
+        # Always store the lower user ID first for consistency
+        if self.user1.id > self.user2.id:
+            self.user1, self.user2 = self.user2, self.user1
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.username} → {self.target_user.username}"
+        return f"DM: {self.user1.username} ⇄ {self.user2.username}"
+
