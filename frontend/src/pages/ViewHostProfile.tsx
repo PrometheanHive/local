@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Card, Group, Avatar, Rating, Title, Text, Divider, Loader, Center } from '@mantine/core';
+import { Container, Card, Group, Avatar, Rating, Title, Text, Divider, Loader, Center, Button } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
 import { useNavigate } from "react-router-dom";
 
@@ -12,6 +12,21 @@ export function ViewHostProfile() {
     const [loading, setLoading] = useState(true);
     const [hostEvents, setHostEvents] = useState<any[]>([]);
   
+    const handleStartDM = async () => {
+      try {
+        await Api.instance.post(`${API_BASE}/general/messaging/start-dm`, {
+          target_user_id: host.id,
+        }, { withCredentials: true });
+    
+        // ✅ Reload the messages page AFTER the backend reflects the change
+        navigate("/messages", { replace: true });
+    
+      } catch (error) {
+        console.error("Failed to start DM:", error);
+        alert("Could not start conversation. Try again.");
+      }
+    };
+    
     useEffect(() => {
       async function fetchHost() {
         try {
@@ -52,7 +67,10 @@ export function ViewHostProfile() {
             <Text>{host.bio}</Text>
           </Group>
         </Card>
-  
+        <Divider my="lg" />
+        <Button variant="filled" color="blue" onClick={handleStartDM}>
+          Message {host.first_name}
+        </Button>
         <Divider my="lg" />
   
         {/* Experiences by this host */}

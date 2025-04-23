@@ -7,14 +7,13 @@ from django.conf import settings
 from ninja import Router, Schema, File, Form
 from ninja.files import UploadedFile
 from pydantic import constr
-from .models import Event, Booking
+from .models import Event, Booking, AllowedDM
 from ninja.errors import HttpError
 from datetime import datetime
 from . import models
 from django.shortcuts import get_object_or_404
 import json
 from django.core.mail import send_mail
-
 
 router = Router()
 UserModel = auth.get_user_model()
@@ -90,6 +89,8 @@ class ReviewCreateSchema(Schema):
 class PhotoUpdateSchema(Schema):
     photos: List[str]
 
+class StartDMSchema(Schema):
+    target_user_id: int
 
 ### File Upload API
 @router.post("/upload")
@@ -464,3 +465,49 @@ def get_events_by_host_id(request, host_id: int):
         }
         for event in events
     ]
+
+@router.post("/messaging/start-dm")
+def start_dm(request, payload: StartDMSchema):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Unauthorized")
+
+    try:
+        target = get_user_model().objects.get(id=payload.target_user_id)
+    except:
+        raise HttpError(404, "User not found")
+
+    # Determine ordering
+    user1, user2 = sorted([request.user, target], key=lambda u: u.id)
+
+    # Create symmetric DM
+    AllowedDM.objects.get_or_create(user1=user1, user2=user2)
+
+    return json_response({"message": f"Mutual DM access granted between {user1.username} and {user2.username}"})
+
+@router.get("/messaging/allowed-uids")
+def get_allowed_dms(request):
+    if not request.user.is_authenticated:
+        raise HttpError(401, "Unauthorized")
+
+    try:
+        dms = AllowedDM.objects.filter(
+            models.Q(user1=request.user) | models.Q(user2=request.user)
+        ).select_related("user1", "user2")
+
+        uids = []
+
+        for dm in dms:
+            try:
+                other = dm.user2 if dm.user1 == request.user else dm.user1
+                uid = other.username.replace("@", "").replace(".", "")
+                uids.append(uid)
+            except Exception as e:
+                print(f"⚠️ Error processing AllowedDM ID={dm.id}: {e}")
+
+        return uids
+
+    except Exception as outer_error:
+        import traceback
+        print("🔥 Critical error in get_allowed_dms API:")
+        print(traceback.format_exc())
+        raise HttpError(500, "Server failed to retrieve allowed users")
