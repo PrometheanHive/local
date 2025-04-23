@@ -56,8 +56,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('Error fetching user data:', error);
         setUser(null); // Ensures failed requests don't break navigation bar
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchUser();

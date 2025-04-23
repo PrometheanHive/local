@@ -5,6 +5,7 @@ import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
 import { CometChatUIKit } from "@cometchat/chat-uikit-react";
 import { AccountSettings } from './AccountSettings';
+import { initializeCometChat } from "@/services/cometchatService";
 
 export function SignIn() {
     const [email, setEmail] = useState<string>("");
@@ -34,10 +35,11 @@ export function SignIn() {
                     setUser(fullUser); // now you’re setting the correct full object
                 
                     // Optional: show a message or redirect later
-                  } catch (err) {
+                } catch (err) {
                     console.error("❌ Failed to fetch full user data after login:", err);
                     setError("Failed to complete login.");
-                  }
+                }
+                await initializeCometChat();
 
                 CometChatUIKit.getLoggedinUser().then((user) => {
                     if (!user) {

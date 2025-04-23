@@ -14,10 +14,10 @@ import {
 import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
 import { CometChatMessages } from "@cometchat/chat-uikit-react";
+import { ensureCometChatLoggedIn } from '@/services/cometchatService'; // ✅ new import
 
 export function MessagesPage() {
-  const auth = useAuth();
-  const user = auth?.user;
+  const { user, isLoading } = useAuth();
   const [allowedUsers, setAllowedUsers] = useState<CometChat.User[]>([]);
   const [activeUser, setActiveUser] = useState<CometChat.User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,47 +25,16 @@ export function MessagesPage() {
 
   console.log("📦 Rendered MessagesPage");
   console.log("🧠 user:", user);
-  console.log("🔄 isLoading (from auth):", auth?.isLoading);
+  console.log("🔄 isLoading (from auth):", isLoading);
 
+  // ✅ Protect CometChat logic behind auth-ready guard
   useEffect(() => {
-    console.log("📡 useEffect fired: checking user...");
-
-    if (!user) {
-      console.warn("⚠️ No user found in auth context.");
-      setError("You must be logged in to access messages.");
-      setLoading(false);
-      return;
-    }
+    if (isLoading || !user) return;
 
     const loadUsers = async () => {
       try {
         const cometChatUID = user.email.replace(/[@.]/g, '');
-        console.log("🆔 Calculated CometChat UID:", cometChatUID);
-
-        const current = await CometChat.getLoggedinUser();
-
-        if (!current || current.getUid() !== cometChatUID) {
-        console.warn(`🔄 Reauthenticating as ${cometChatUID} (was: ${current?.getUid()})`);
-
-        try {
-            if (current) {
-            console.log("📤 Logging out previous CometChat session...");
-            await CometChat.logout(); // this might fail if session is stale
-            }
-        } catch (logoutError) {
-            console.warn("⚠️ CometChat logout failed or not needed:", logoutError);
-            // intentionally swallowing the error here
-        }
-
-        try {
-            await CometChat.login(cometChatUID);
-            console.log(`✅ CometChat logged in as: ${cometChatUID}`);
-        } catch (loginError) {
-            console.error("❌ CometChat login failed:", loginError);
-            throw loginError; // Let your catch block in `loadUsers()` handle this
-        }
-        }
-
+        await ensureCometChatLoggedIn(user.email); // ✅ central init + login
 
         console.log("🌐 Fetching allowed UIDs from backend...");
         const response = await Api.instance.get<string[]>(
@@ -106,7 +75,15 @@ export function MessagesPage() {
     };
 
     loadUsers();
-  }, [user]);
+  }, [isLoading, user]);
+
+  if (isLoading) {
+    return (
+      <Center style={{ height: "100vh" }}>
+        <Loader size="xl" />
+      </Center>
+    );
+  }
 
   if (error) {
     console.warn("🛑 Rendering error fallback");
