@@ -170,19 +170,28 @@ def create_user(request):
     user.is_host = data.get("role") in ["host", "both"]
     user.save()
 
+    # ✅ Automatically allow messaging to admin/owner account
+    try:
+        owner_user = UserModel.objects.get(email="experiencebylocals@gmail.com")
+        user1, user2 = sorted([user, owner_user], key=lambda u: u.id)
+        AllowedDM.objects.get_or_create(user1=user1, user2=user2)
+        print(f"✅ DM access granted between {user1.username} and {user2.username}")
+    except UserModel.DoesNotExist:
+        print("⚠️ Owner user not found — skipping auto-DM setup")
+
     send_mail(
-    subject="Welcome to Local!",
-    message=(
-        f"Hi {user.first_name},\n\n"
-        "Welcome to Local — we're excited to help you experience real culture wherever you travel.\n\n"
-        "You can log in anytime at https://dev.experiencebylocals.com/sign-in\n\n"
-        "Have questions or ideas? Just email us anytime at support@experiencebylocals.com.\n\n"
-        "Cheers,\nThe Local Team"
-    ),
-    from_email=None,  # Uses DEFAULT_FROM_EMAIL from settings
-    recipient_list=[user.email],
-    fail_silently=False
-)
+        subject="Welcome to Local!",
+        message=(
+            f"Hi {user.first_name},\n\n"
+            "Welcome to Local — we're excited to help you experience real culture wherever you travel.\n\n"
+            "You can log in anytime at https:/experiencebylocals.com/sign-in\n\n"
+            "Have questions or ideas? Just email us anytime at support@experiencebylocals.com.\n\n"
+            "Cheers,\nThe Local Team"
+        ),
+        from_email=None,  # Uses DEFAULT_FROM_EMAIL from settings
+        recipient_list=[user.email],
+        fail_silently=False
+    )
 
     return json_response({"message": "User created", "user_id": user.id})
 
