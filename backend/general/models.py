@@ -25,6 +25,7 @@ class Event(models.Model):
     number_of_bookings = models.PositiveIntegerField(default=0)
     occurence_date = models.DateTimeField(blank=True, null=True)
     duration = models.DurationField(blank=True, null=True)
+    tags = models.ManyToManyField(EventTags, blank=True, related_name='events')
 
     # NEW GEO INFO
     location = models.CharField(max_length=255)
