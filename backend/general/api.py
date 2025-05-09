@@ -280,6 +280,13 @@ def update_user_profile(request):
     if profile_pic:
         user.profile_pic.save(profile_pic.name, profile_pic.file, save=True)
 
+    social_links = post.get("social_links")
+    if social_links:
+        try:
+            user.social_links = json.loads(social_links)
+        except json.JSONDecodeError:
+            raise HttpError(400, "Invalid JSON for social_links")
+        
     user.save()
     return json_response({"message": "Profile updated successfully"})
 

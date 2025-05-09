@@ -7,5 +7,7 @@ export interface User {
   profile_pic?: string;
   is_traveler?: boolean;
   is_host?: boolean;
+  social_links?: {
+    [platform: string]: string;
+  };
 }
-  
