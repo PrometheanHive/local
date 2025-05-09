@@ -287,13 +287,22 @@ def update_user_profile(request):
 
 
 @router.get("/event/get_all", response=List[EventSchema])
-def list_all_events(request):
-    """Returns a list of all events."""
+def list_all_events(request, date: Optional[str] = None, location: Optional[str] = None,
+                    available: Optional[bool] = None, tags: Optional[str] = None):
     events = Event.objects.all()
 
-    if not events.exists():
-        return json_response([])  # Return empty list if no events
+    if date:
+        events = events.filter(occurence_date__gte=date)
 
+    if location:
+        events = events.filter(location__icontains=location)
+
+    if available:
+        events = events.filter(number_of_bookings__lt=models.F('number_of_guests'))
+
+    if tags:
+        tag_list = tags.split(",")
+        events = events.filter(eventtags__tag_name__in=tag_list).distinct()
     return [
     EventSchema(
         id=event.id,
