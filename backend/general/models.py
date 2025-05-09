@@ -30,7 +30,7 @@ class Event(models.Model):
     location = models.CharField(max_length=255)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
-    point = geomodels.PointField(geography=True, blank=True, null=True)
+    #point = geomodels.PointField(geography=True, blank=True, null=True)
 
     price = models.DecimalField(default=0.00, max_digits=10, decimal_places=2, blank=True, null=True)
     photos = models.JSONField(blank=True, null=True)
