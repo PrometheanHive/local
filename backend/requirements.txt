@@ -5,3 +5,4 @@ djangorestframework
 gunicorn
 Pillow>=10.0.0
 python-dotenv
+stripe==9.4.0
