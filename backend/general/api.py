@@ -523,3 +523,8 @@ def get_allowed_dms(request):
         print("🔥 Critical error in get_allowed_dms API:")
         print(traceback.format_exc())
         raise HttpError(500, "Server failed to retrieve allowed users")
+
+@router.get("/tags")
+def get_all_tags(request):
+    tags = EventTags.objects.all()
+    return json_response({"tags": [{"id": t.id, "tag_name": t.tag_name} for t in tags]})
