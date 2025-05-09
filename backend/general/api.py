@@ -160,21 +160,33 @@ def get_current_user(request):
 @router.post("/user/create")
 def create_user(request):
     data = request.POST
+    email = data.get("email")
+    username = email  # Enforce email=username
 
-    if UserModel.objects.filter(username=data.get("username")).exists():
-        return json_response({"error": "Username already exists"}, status=400)
+    # Check for email collision
+    existing_user = UserModel.objects.filter(email=email).first()
+    if existing_user:
+        if existing_user.auth_provider and existing_user.auth_provider != "local":
+            return json_response({
+                "error": (
+                    f"This email is already associated with a {existing_user.auth_provider.capitalize()} login. "
+                    f"Please log in using {existing_user.auth_provider.capitalize()}."
+                )
+            }, status=409)
+        else:
+            return json_response({"error": "An account with this email already exists."}, status=409)
 
     user = UserModel.objects.create_user(
-        username=data.get("username"),
+        username=username,
         password=data.get("password"),
-        email=data.get("email"),
+        email=email,
         first_name=data.get("first_name"),
         last_name=data.get("last_name")
     )
-
     user.bio = data.get("bio", "")
     user.is_traveler = data.get("role") in ["traveler", "both"]
     user.is_host = data.get("role") in ["host", "both"]
+    user.auth_provider = "local"
     user.save()
 
     # ✅ Automatically allow messaging to admin/owner account
@@ -195,12 +207,13 @@ def create_user(request):
             "Have questions or ideas? Just email us anytime at support@experiencebylocals.com.\n\n"
             "Cheers,\nThe Local Team"
         ),
-        from_email=None,  # Uses DEFAULT_FROM_EMAIL from settings
+        from_email=None,
         recipient_list=[user.email],
         fail_silently=False
     )
 
     return json_response({"message": "User created", "user_id": user.id})
+
 
 
 @router.post("/user/authenticate")
@@ -231,11 +244,10 @@ def authenticate_user(request, payload: UserAuthSchema):
 def oauth_login(request, payload: OAuthSchema):
     try:
         if payload.provider == "google":
-            # Validate Google ID token
             idinfo = google_id_token.verify_oauth2_token(
                 payload.token,
                 google_requests.Request(),
-                audience=None  # optionally enforce a client_id
+                audience=None
             )
             email = idinfo["email"]
             first_name = idinfo.get("given_name", "")
@@ -243,17 +255,27 @@ def oauth_login(request, payload: OAuthSchema):
         else:
             raise HttpError(400, "Unsupported provider")
 
-        user, created = UserModel.objects.get_or_create(email=email, defaults={
-            "username": email,
-            "first_name": first_name,
-            "last_name": last_name,
-            "auth_provider": payload.provider
-        })
+        user = UserModel.objects.filter(email=email).first()
 
-        if created:
+        if user:
+            # Conflict with another provider
+            if user.auth_provider and user.auth_provider != payload.provider:
+                raise HttpError(409, f"This email is already used for {user.auth_provider.capitalize()} login. Please log in using that method.")
+            # Allow login for matching provider
+            print(f"✅ Logging in existing user {email}")
+        else:
+            # Create new user
+            user = UserModel.objects.create_user(
+                username=email,
+                email=email,
+                password=None
+            )
+            user.first_name = first_name
+            user.last_name = last_name
             user.is_traveler = True
+            user.auth_provider = payload.provider
             user.save()
-            print(f"✅ New user created via {payload.provider}: {email}")
+            print(f"✅ Created new user via {payload.provider}: {email}")
 
         login(request, user)
         request.session.create()
