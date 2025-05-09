@@ -48,18 +48,23 @@ export function CreateExperience() {
 
   useEffect(() => {
     if (!autocompleteRef.current) return;
-
+  
     const autocomplete = new window.google.maps.places.Autocomplete(autocompleteRef.current);
     autocomplete.setFields(["formatted_address", "geometry"]);
-
+  
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
-      if (!place.geometry) return;
-
+  
+      // ✅ Check for geometry existence before using it
+      if (!place.geometry || !place.geometry.location) {
+        alert("Please select a valid place from the suggestions.");
+        return;
+      }
+  
       const address = place.formatted_address ?? '';
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
-
+  
       form.setValues({
         ...form.values,
         location: address,
