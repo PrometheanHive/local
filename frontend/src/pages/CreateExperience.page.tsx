@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TextInput, Text, Textarea, NumberInput, Button, Group, Paper, Title, Container, CloseButton, Grid, Center, Stack } from '@mantine/core';
+import {
+  TextInput, Text, Textarea, NumberInput, Button, Group,
+  Paper, Title, Container, CloseButton, Grid, Center, Stack
+} from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Api, { API_BASE } from '@/api/API';
 
+// ✅ Add this to avoid TypeScript errors on window.google
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 interface FormValues {
   title: string;
   number_of_guests: number | undefined;
@@ -15,6 +24,8 @@ interface FormValues {
   price: number | undefined;
   occurence_date: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   photos: File[];
   passphrase: string;
 }
@@ -31,12 +42,43 @@ export function CreateExperience() {
       price: undefined,
       occurence_date: '',
       location: '',
+      latitude: undefined,
+      longitude: undefined,
       photos: [],
       passphrase: '',
     },
   });
 
   const navigate = useNavigate();
+  const autocompleteRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!autocompleteRef.current) return;
+  
+    const autocomplete = new window.google.maps.places.Autocomplete(autocompleteRef.current);
+    autocomplete.setFields(["formatted_address", "geometry"]);
+  
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+  
+      // ✅ Check for geometry existence before using it
+      if (!place.geometry || !place.geometry.location) {
+        alert("Please select a valid place from the suggestions.");
+        return;
+      }
+  
+      const address = place.formatted_address ?? '';
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+  
+      form.setValues({
+        ...form.values,
+        location: address,
+        latitude: lat,
+        longitude: lng
+      });
+    });
+  }, []);
 
   const handleSubmit = async (values: typeof form.values) => {
     if (values.passphrase !== "iamahost") {
@@ -45,7 +87,6 @@ export function CreateExperience() {
     }
 
     try {
-      // Step 1: Create event (without photos)
       const eventResponse = await Api.instance.post(`${API_BASE}/general/event/create`, {
         ...values,
         photos: []
@@ -57,7 +98,6 @@ export function CreateExperience() {
       const eventId = eventResponse.data.event_id;
       const uploadedUrls: string[] = [];
 
-      // Step 2: Upload images
       for (const file of values.photos) {
         const formData = new FormData();
         formData.append("file", file);
@@ -74,7 +114,6 @@ export function CreateExperience() {
         uploadedUrls.push(uploadResponse.data.fileUrl);
       }
 
-      // Step 3: Patch event with photo URLs
       await Api.instance.patch(`${API_BASE}/general/event/id/${eventId}/update_photos`, {
         photos: uploadedUrls
       }, {
@@ -148,13 +187,31 @@ export function CreateExperience() {
                   </Stack>
                 )}
               </fieldset>
+
               <DateTimePicker
                 required
                 valueFormat="DD MMM YYYY hh:mm A"
                 dropdownType="modal"
                 label="Experience Date" {...form.getInputProps('occurence_date')}
-                placeholder="Pick a date" />
-              <TextInput required label="Experience Location" {...form.getInputProps('location')} />
+                placeholder="Pick a date"
+              />
+
+              <div style={{ marginBottom: 16 }}>
+                <Text size="sm" fw={500} mb={4}>Experience Location</Text>
+                <input
+                  ref={autocompleteRef}
+                  placeholder="Start typing a location..."
+                  style={{
+                    padding: "8px 12px",
+                    width: "100%",
+                    border: "1px solid #ced4da",
+                    borderRadius: 4,
+                    fontSize: "14px"
+                  }}
+                  required
+                />
+              </div>
+
               <TextInput
                 required
                 label="Enter Host Code Phrase"
@@ -162,6 +219,7 @@ export function CreateExperience() {
                 {...form.getInputProps('passphrase')}
                 style={{ marginTop: 20, width: "100%" }}
               />
+
               <Group justify="space-between" mt="md">
                 <Button type="submit">Post Experience</Button>
               </Group>
