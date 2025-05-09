@@ -15,7 +15,14 @@ from django.shortcuts import get_object_or_404
 import json
 from django.core.mail import send_mail
 from django.db.models import Q
+from typing import Literal
+import requests
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 
+class OAuthSchema(Schema):
+    provider: Literal["google", "apple", "meta"]
+    token: str
 
 router = Router()
 UserModel = auth.get_user_model()
@@ -218,6 +225,66 @@ def authenticate_user(request, payload: UserAuthSchema):
         return response
     else:
         return json_response({"error": "Invalid username or password"}, status=401)
+
+
+@router.post("/user/oauth-login")
+def oauth_login(request, payload: OAuthSchema):
+    try:
+        if payload.provider == "google":
+            # Validate Google ID token
+            idinfo = google_id_token.verify_oauth2_token(
+                payload.token,
+                google_requests.Request(),
+                audience=None  # optionally enforce a client_id
+            )
+            email = idinfo["email"]
+            first_name = idinfo.get("given_name", "")
+            last_name = idinfo.get("family_name", "")
+        else:
+            raise HttpError(400, "Unsupported provider")
+
+        user, created = UserModel.objects.get_or_create(email=email, defaults={
+            "username": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "auth_provider": payload.provider
+        })
+
+        if created:
+            user.is_traveler = True
+            user.save()
+            print(f"✅ New user created via {payload.provider}: {email}")
+
+        login(request, user)
+        request.session.create()
+
+        response = json_response({
+            "message": "User logged in via OAuth",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "bio": user.bio,
+                "profile_pic": user.profile_pic.url if user.profile_pic else None,
+                "is_traveler": user.is_traveler,
+                "is_host": user.is_host
+            }
+        })
+        response.set_cookie(
+            "sessionid", request.session.session_key,
+            httponly=True, secure=True, samesite="None"
+        )
+        return response
+
+    except ValueError as ve:
+        print("❌ Google token verification failed:", ve)
+        raise HttpError(401, "Invalid Google token")
+    except Exception as e:
+        import traceback
+        print("🔥 OAuth login error:", traceback.format_exc())
+        raise HttpError(500, "OAuth login failed")
 
 
 @router.post("/user/logout")

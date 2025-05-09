@@ -67,6 +67,7 @@ class CustomUser(AbstractUser):
     profile_pic = models.ImageField(upload_to=user_profile_pic_path, blank=True, null=True)
     is_traveler = models.BooleanField(default=False)
     is_host = models.BooleanField(default=False)
+    auth_provider = models.CharField(max_length=50, null=True, blank=True)  # <-- ADD THIS
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
