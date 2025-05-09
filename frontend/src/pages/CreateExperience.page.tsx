@@ -9,6 +9,12 @@ import { useForm } from '@mantine/form';
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone';
 import Api, { API_BASE } from '@/api/API';
 
+// ✅ Add this to avoid TypeScript errors on window.google
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 interface FormValues {
   title: string;
   number_of_guests: number | undefined;
