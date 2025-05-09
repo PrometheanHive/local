@@ -5,3 +5,6 @@ djangorestframework
 gunicorn
 Pillow>=10.0.0
 python-dotenv
+google-auth
+python-jose
+requests

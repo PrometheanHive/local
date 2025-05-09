@@ -4,6 +4,9 @@
     "@tabler/icons-react": "^2.47.0",
     "@cometchat/chat-sdk-javascript": "^4.3.0",
     "@cometchat/chat-uikit-react": "^4.3.0",
+    "@react-oauth/google": "^0.10.0",
+    "react-apple-signin-auth": "^1.0.0",
+    "react-facebook-login": "^4.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }
