@@ -54,6 +54,8 @@ services:
     build:
       context: frontend/.
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
       - BACKEND_API_PORT=${BACKEND_API_PORT}
       - CHOKIDAR_USEPOLLING=true

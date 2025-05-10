@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404
 import json
 from django.core.mail import send_mail
 from django.db.models import Q
+from .models import EventTags
 
 
 router = Router()
@@ -55,6 +56,7 @@ class EventSchema(Schema):
     photos: List[str] = []
     number_of_guests: int
     number_of_bookings: int
+    tags: List[str] = []
 
 
 class BookingSchema(Schema):
@@ -74,6 +76,7 @@ class EventCreateSchema(Schema):
     number_of_guests: int
     number_of_bookings: int
     photos: List[str] = []
+    tags: List[int] = [] 
 
 class EventCreateResponse(Schema):
     message: str
@@ -314,7 +317,8 @@ def list_all_events(request, date: Optional[str] = None, location: Optional[str]
         price=float(event.price),
         photos=event.photos or [],
         number_of_guests=event.number_of_guests,
-        number_of_bookings=event.number_of_bookings
+        number_of_bookings=event.number_of_bookings,
+        tags=[tag.tag_name for tag in event.tags.all()] 
     ) for event in events
 ]
 
@@ -337,6 +341,8 @@ def create_event(request, payload: EventCreateSchema):
             photos=payload.photos,
             host=request.user
         )
+        if payload.tags:
+                event.tags.set(EventTags.objects.filter(id__in=payload.tags))
     except Exception as e:
         raise HttpError(400, f"Failed to create event: {str(e)}")
 
@@ -358,7 +364,8 @@ def get_event_by_id(request, event_id: int):
             "host_first_name": event.host.first_name if event.host else "Unknown",
             "host_last_name": event.host.last_name if event.host else "",
             "host_profile_pic": event.host.profile_pic.url if event.host and event.host.profile_pic else "",
-            "host_id": event.host.id if event.host else None
+            "host_id": event.host.id if event.host else None,
+            "tags": [tag.tag_name for tag in event.tags.all()]
         })
     except Event.DoesNotExist:
         raise HttpError(404, "Event not found")
@@ -532,3 +539,8 @@ def get_allowed_dms(request):
         print("🔥 Critical error in get_allowed_dms API:")
         print(traceback.format_exc())
         raise HttpError(500, "Server failed to retrieve allowed users")
+
+@router.get("/tags")
+def get_all_tags(request):
+    tags = EventTags.objects.all()
+    return json_response({"tags": [{"id": t.id, "tag_name": t.tag_name} for t in tags]})
