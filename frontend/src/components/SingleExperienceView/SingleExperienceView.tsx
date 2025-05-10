@@ -80,12 +80,13 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
               <Text size="lg">
                 <strong>Pricing:</strong> ${typeof experienceData.price === "number" ? experienceData.price.toFixed(2) : parseFloat(experienceData.price).toFixed(2)}
               </Text>
+              <Text size="lg"><strong>Date:</strong> {formattedDate}</Text>
               <Text size="lg"><strong>Location:</strong> {experienceData.location}</Text>
               {experienceData.tags && experienceData.tags.length > 0 && (
                 <Group mt="md" gap="xs">
                   {experienceData.tags.map((tag, idx) => (
-                    <Badge key={idx} color="blue" variant="filled">
-                      {tag} • {formattedDate} • {experienceData.location}
+                    <Badge key={idx} color="blue" variant="light">
+                      {tag}
                     </Badge>
                   ))}
                 </Group>
