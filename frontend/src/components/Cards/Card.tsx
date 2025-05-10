@@ -8,9 +8,10 @@ interface CardItemProps {
   description: string;
   imageUrl: string;
   available: number;
+  children?: React.ReactNode; // ✅ Add this
 }
 
-export function CardItem({ title, description, imageUrl, available }: CardItemProps) {
+export function CardItem({ title, description, imageUrl, available, children }: CardItemProps) {
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Card.Section>
@@ -22,13 +23,14 @@ export function CardItem({ title, description, imageUrl, available }: CardItemPr
         <Badge color="pink">{available} Spots Available</Badge>
       </Group>
 
-      <Text size="sm" c="dimmed">
-        {description}
-      </Text>
+      <Text size="sm" c="dimmed">{description}</Text>
 
-      {/* <Button color="blue" fullWidth mt="md" radius="md">
-        Book now
-      </Button> */}
+      {children && (
+        <div style={{ marginTop: '0.75rem' }}>
+          {children} {/* ✅ Inject date/location/tags */}
+        </div>
+      )}
     </Card>
   );
 }
+
