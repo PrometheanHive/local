@@ -308,7 +308,7 @@ def list_all_events(request):
         price=float(event.price),
         photos=event.photos or [],
         number_of_guests=event.number_of_guests,
-        number_of_bookings=event.number_of_bookings
+        number_of_bookings=event.number_of_bookings,
         tags=[tag.id for tag in event.tags.all()] 
     ) for event in events
 ]
@@ -355,7 +355,7 @@ def get_event_by_id(request, event_id: int):
             "host_first_name": event.host.first_name if event.host else "Unknown",
             "host_last_name": event.host.last_name if event.host else "",
             "host_profile_pic": event.host.profile_pic.url if event.host and event.host.profile_pic else "",
-            "host_id": event.host.id if event.host else None
+            "host_id": event.host.id if event.host else None,
             "tags": [tag.tag_name for tag in event.tags.all()]
         })
     except Event.DoesNotExist:

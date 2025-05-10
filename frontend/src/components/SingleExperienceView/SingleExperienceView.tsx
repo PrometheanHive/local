@@ -82,7 +82,7 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
               </Text>
               <Text size="lg"><strong>Location:</strong> {experienceData.location}</Text>
               {experienceData.tags && experienceData.tags.length > 0 && (
-                <Group mt="md" spacing="xs">
+                <Group mt="md" gap="xs">
                   {experienceData.tags.map((tag, idx) => (
                     <Badge key={idx} color="blue" variant="filled">
                       {tag} • {formattedDate} • {experienceData.location}
