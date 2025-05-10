@@ -56,7 +56,7 @@ class EventSchema(Schema):
     photos: List[str] = []
     number_of_guests: int
     number_of_bookings: int
-    tags: List[int] = []
+    tags: List[str] = []
 
 
 class BookingSchema(Schema):
@@ -309,7 +309,7 @@ def list_all_events(request):
         photos=event.photos or [],
         number_of_guests=event.number_of_guests,
         number_of_bookings=event.number_of_bookings,
-        tags=[tag.id for tag in event.tags.all()] 
+        tags=[tag.tag_name for tag in event.tags.all()] 
     ) for event in events
 ]
 
