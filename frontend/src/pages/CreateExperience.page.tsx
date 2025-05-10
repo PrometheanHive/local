@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   TextInput, Text, Textarea, NumberInput, Button, Group,
-  Paper, Title, Container, CloseButton, Grid, Center, Stack
+  Paper, Title, Container, CloseButton, Grid, Center, Stack, MultiSelect
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -15,6 +15,7 @@ declare global {
     google: any;
   }
 }
+
 interface FormValues {
   title: string;
   number_of_guests: number | undefined;
@@ -32,6 +33,10 @@ interface FormValues {
 
 export function CreateExperience() {
   const [fileUrls, setFileUrls] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<{ label: string; value: string }[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const tagIdMap = useRef<{ [name: string]: number }>({});
+
   const form = useForm<FormValues>({
     initialValues: {
       title: '',
@@ -54,29 +59,39 @@ export function CreateExperience() {
 
   useEffect(() => {
     if (!autocompleteRef.current) return;
-  
+
     const autocomplete = new window.google.maps.places.Autocomplete(autocompleteRef.current);
     autocomplete.setFields(["formatted_address", "geometry"]);
-  
+
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
-  
-      // ✅ Check for geometry existence before using it
+
       if (!place.geometry || !place.geometry.location) {
         alert("Please select a valid place from the suggestions.");
         return;
       }
-  
+
       const address = place.formatted_address ?? '';
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
-  
+
       form.setValues({
         ...form.values,
         location: address,
         latitude: lat,
         longitude: lng
       });
+    });
+  }, []);
+
+  useEffect(() => {
+    Api.instance.get(`${API_BASE}/general/tags`).then((res) => {
+      const tags = res.data.tags;
+      const options = tags.map((tag: any) => {
+        tagIdMap.current[tag.tag_name] = tag.id;
+        return { label: tag.tag_name, value: tag.tag_name };
+      });
+      setAvailableTags(options);
     });
   }, []);
 
@@ -89,6 +104,7 @@ export function CreateExperience() {
     try {
       const eventResponse = await Api.instance.post(`${API_BASE}/general/event/create`, {
         ...values,
+        tags: selectedTagIds.map((name) => tagIdMap.current[name]),
         photos: []
       }, {
         headers: { "Content-Type": "application/json" },
@@ -211,6 +227,16 @@ export function CreateExperience() {
                   required
                 />
               </div>
+
+              <MultiSelect
+                label="Tags"
+                data={availableTags}
+                value={selectedTagIds}
+                onChange={setSelectedTagIds}
+                placeholder="Select relevant tags"
+                searchable
+                clearable
+              />
 
               <TextInput
                 required

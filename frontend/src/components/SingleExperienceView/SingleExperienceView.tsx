@@ -18,6 +18,7 @@ import {
   Rating,
   Modal,
   Textarea,
+  Badge
 } from "@mantine/core";
 import { Link } from 'react-router-dom';
 
@@ -52,6 +53,9 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
     navigate("/sign-in");
   };
 
+  const formattedDate = new Date(experienceData.occurence_date).toLocaleDateString();
+  const formattedTime = new Date(experienceData.occurence_date).toLocaleTimeString([], { timeStyle: "short" });
+
   return (
     <Container my={40}>
       <Title order={1} mb="lg">{experienceData.title}</Title>
@@ -77,6 +81,15 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
                 <strong>Pricing:</strong> ${typeof experienceData.price === "number" ? experienceData.price.toFixed(2) : parseFloat(experienceData.price).toFixed(2)}
               </Text>
               <Text size="lg"><strong>Location:</strong> {experienceData.location}</Text>
+              {experienceData.tags && experienceData.tags.length > 0 && (
+                <Group mt="md" spacing="xs">
+                  {experienceData.tags.map((tag, idx) => (
+                    <Badge key={idx} color="blue" variant="filled">
+                      {tag} • {formattedDate} • {experienceData.location}
+                    </Badge>
+                  ))}
+                </Group>
+              )}
               <Divider />
 
               <Card shadow="sm" p="lg">
@@ -122,8 +135,7 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
                     fullWidth
                     style={{ margin: "10px 0" }}
                   >
-                    RSVP for {new Date(experienceData.occurence_date).toLocaleDateString()} at{" "}
-                    {new Date(experienceData.occurence_date).toLocaleTimeString([], { timeStyle: "short" })}
+                    RSVP for {formattedDate} at {formattedTime}
                   </Button>
                 </Stack>
               </Card>
