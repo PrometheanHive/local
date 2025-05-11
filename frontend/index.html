@@ -8,9 +8,16 @@
       content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
     />
     <title>Local</title>
+
+    <!-- ✅ Load Google Maps JS API with v=beta to get PlaceAutocompleteElement support -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&v=beta"
+      defer
+    ></script>
   </head>
   <body>
     <div id="root"></div>
+    <!-- ✅ Only load your main app script here -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

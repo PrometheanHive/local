@@ -95,7 +95,11 @@ export function EventFilterBar({ onFilterChange }: { onFilterChange: (query: URL
       <Group grow>
         <div style={{ flex: 1 }}>
           <label style={{ display: 'block', fontSize: '14px', marginBottom: '4px' }}>Location</label>
-          <div id="place-autocomplete" style={{ width: "100%", height: "40px" }}></div>
+          <gmpx-placeautocomplete
+            id="place-autocomplete"
+            style={{ width: '100%', height: '40px' }}
+            placeholder="Search for a location"
+          ></gmpx-placeautocomplete>
         </div>
         <Select
           label="Radius (miles)"

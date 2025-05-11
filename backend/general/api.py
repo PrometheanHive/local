@@ -16,12 +16,11 @@ import json
 from django.core.mail import send_mail
 from django.db.models import Q, F
 from .models import EventTags
-from django.db.models import F, Q
 from datetime import datetime
 from ninja import Router
 from typing import List, Optional
 from .models import Event
-from .schemas import EventSchema
+#from .schemas import EventSchema
 from django.utils import timezone
 from geopy.distance import geodesic
 
@@ -330,7 +329,7 @@ def list_filtered_events(request,
 
     if tags_include:
         include_tags = tags_include.split(",")
-        qs = qs.filter(tags__tag_name__in=include_tags)
+        qs = qs.filter(tags__tag_name__in=include_tags).distict()
 
     if tags_exclude:
         exclude_tags = tags_exclude.split(",")
