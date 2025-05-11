@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Button,
   MultiSelect,
@@ -7,10 +7,17 @@ import {
   Group,
   Select,
   Title,
-  Divider
+  Divider,
+  TextInput
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import Api, { API_BASE } from '@/api/API';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 export function EventFilterBar({ onFilterChange }: { onFilterChange: (query: URLSearchParams) => void }) {
   const [tags, setTags] = useState<{ value: string; label: string }[]>([]);
@@ -20,7 +27,9 @@ export function EventFilterBar({ onFilterChange }: { onFilterChange: (query: URL
   const [range, setRange] = useState<[Date | null, Date | null]>([null, null]);
   const [radius, setRadius] = useState("10");
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [locationName, setLocationName] = useState<string>("");
   const [availableOnly, setAvailableOnly] = useState(false);
+  const locationInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     Api.instance.get(`${API_BASE}/general/tags`).then((res) => {
@@ -30,16 +39,27 @@ export function EventFilterBar({ onFilterChange }: { onFilterChange: (query: URL
   }, []);
 
   useEffect(() => {
-    const el = document.getElementById("place-autocomplete");
-    if (el) {
-      el.addEventListener("gmpx-placeautocomplete-placechange", (event: any) => {
-        const place = event.detail;
-        const lat = place.geometry?.location?.lat();
-        const lon = place.geometry?.location?.lng();
-        if (lat && lon) setCoords({ lat, lon });
-      });
-    }
-  }, []);
+    if (!window.google || !locationInputRef.current) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current);
+    autocomplete.setFields(["formatted_address", "geometry"]);
+
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+
+      if (!place.geometry || !place.geometry.location) {
+        alert("Please select a valid place from the suggestions.");
+        return;
+      }
+
+      const lat = place.geometry.location.lat();
+      const lon = place.geometry.location.lng();
+      const address = place.formatted_address ?? "";
+
+      setCoords({ lat, lon });
+      setLocationName(address);
+    });
+  }, [locationInputRef]);
 
   const applyFilters = () => {
     const params = new URLSearchParams();
@@ -93,14 +113,14 @@ export function EventFilterBar({ onFilterChange }: { onFilterChange: (query: URL
         />
       </Group>
       <Group grow>
-        <div style={{ flex: 1 }}>
-          <label style={{ display: 'block', fontSize: '14px', marginBottom: '4px' }}>Location</label>
-          <gmpx-placeautocomplete
-            id="place-autocomplete"
-            style={{ width: '100%', height: '40px' }}
-            placeholder="Search for a location"
-          ></gmpx-placeautocomplete>
-        </div>
+        <TextInput
+          label="Location"
+          placeholder="Start typing a location..."
+          value={locationName}
+          onChange={(e) => setLocationName(e.currentTarget.value)}
+          ref={locationInputRef}
+          style={{ flex: 1 }}
+        />
         <Select
           label="Radius (miles)"
           data={["5", "10", "25", "50"]}
