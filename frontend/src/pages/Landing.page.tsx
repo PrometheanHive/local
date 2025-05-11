@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CardItem } from '../components/Cards/Card';
 import Api, { API_BASE } from '@/api/API';
 import { Container, Title, Grid, Text, Badge, Group, Stack } from '@mantine/core';
+import { EventFilterBar } from '../components/EventFilterBar/EventFilterBar';
 
 interface Experience {
   id: number;
@@ -17,27 +18,25 @@ interface Experience {
 }
 
 export function LandingPage() {
-  const [experiences, setExperiences] = React.useState<Experience[]>([]);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [queryParams, setQueryParams] = useState<URLSearchParams>(new URLSearchParams());
 
-  React.useEffect(() => {
-    async function fetchExperiences() {
-      try {
-        const response = await Api.instance.get<Experience[]>(`${API_BASE}/general/event/get_all`);
-        console.log("API Response:", response.data);
-
-        const validExperiences = (Array.isArray(response.data) ? response.data : []).filter(
-          (exp) => exp.photos && exp.photos.length > 0
-        );
-
-        setExperiences(validExperiences);
-      } catch (error) {
-        console.error("Error fetching experiences:", error);
-        setExperiences([]);
-      }
+  const fetchExperiences = async (params: URLSearchParams) => {
+    try {
+      const response = await Api.instance.get<Experience[]>(`${API_BASE}/general/event/get_all?${params.toString()}`);
+      const validExperiences = (Array.isArray(response.data) ? response.data : []).filter(
+        (exp) => exp.photos && exp.photos.length > 0
+      );
+      setExperiences(validExperiences);
+    } catch (error) {
+      console.error("Error fetching experiences:", error);
+      setExperiences([]);
     }
+  };
 
-    fetchExperiences();
-  }, []);
+  useEffect(() => {
+    fetchExperiences(queryParams);
+  }, [queryParams]);
 
   return (
     <div className="landing-page">
@@ -45,6 +44,9 @@ export function LandingPage() {
         <Title order={1} mb="lg" style={{ marginBottom: '30px', paddingTop: '30px' }}>
           Browse Experiences
         </Title>
+
+        <EventFilterBar onFilterChange={setQueryParams} />
+
         <Container>
           <Grid justify="center" gutter="md">
             {experiences.length === 0 ? (
@@ -53,7 +55,6 @@ export function LandingPage() {
               </p>
             ) : (
               experiences.map((card) => {
-                if (card.number_of_guests === 0) return null;
                 const available = Math.max(0, (card.number_of_guests ?? 2) - (card.number_of_bookings ?? 0));
                 const date = card.occurence_date ? new Date(card.occurence_date).toLocaleDateString() : null;
 

@@ -14,9 +14,16 @@ from . import models
 from django.shortcuts import get_object_or_404
 import json
 from django.core.mail import send_mail
-from django.db.models import Q
+from django.db.models import Q, F
 from .models import EventTags
-
+from django.db.models import F, Q
+from datetime import datetime
+from ninja import Router
+from typing import List, Optional
+from .models import Event
+from .schemas import EventSchema
+from django.utils import timezone
+from geopy.distance import geodesic
 
 router = Router()
 UserModel = auth.get_user_model()
@@ -290,37 +297,74 @@ def update_user_profile(request):
 
 
 @router.get("/event/get_all", response=List[EventSchema])
-def list_all_events(request, date: Optional[str] = None, location: Optional[str] = None,
-                    available: Optional[bool] = None, tags: Optional[str] = None):
-    events = Event.objects.all()
+def list_filtered_events(request, 
+                         date: Optional[str] = None,
+                         date_after: Optional[str] = None,
+                         date_before: Optional[str] = None,
+                         location: Optional[str] = None,
+                         radius: Optional[int] = None,
+                         tags_include: Optional[str] = None,
+                         tags_exclude: Optional[str] = None,
+                         available_only: Optional[bool] = False,
+                         sort_by_date: Optional[bool] = True,
+                         user_lat: Optional[float] = None,
+                         user_lon: Optional[float] = None):
+
+    qs = Event.objects.all()
+
+    # Filter out past events
+    now = timezone.now()
+    qs = qs.filter(occurence_date__gte=now)
 
     if date:
-        events = events.filter(occurence_date__gte=date)
+        qs = qs.filter(occurence_date__date=date)
 
-    if location:
-        events = events.filter(location__icontains=location)
+    if date_after:
+        qs = qs.filter(occurence_date__gte=date_after)
 
-    if available:
-        events = events.filter(number_of_bookings__lt=models.F('number_of_guests'))
+    if date_before:
+        qs = qs.filter(occurence_date__lte=date_before)
 
-    if tags:
-        tag_list = tags.split(",")
-        events = events.filter(eventtags__tag_name__in=tag_list).distinct()
+    if available_only:
+        qs = qs.filter(number_of_bookings__lt=F("number_of_guests"))
+
+    if tags_include:
+        include_tags = tags_include.split(",")
+        qs = qs.filter(tags__tag_name__in=include_tags)
+
+    if tags_exclude:
+        exclude_tags = tags_exclude.split(",")
+        qs = qs.exclude(tags__tag_name__in=exclude_tags)
+
+    if sort_by_date:
+        qs = qs.order_by("occurence_date")
+
+    if user_lat is not None and user_lon is not None and radius is not None:
+        user_coords = (user_lat, user_lon)
+        filtered_ids = []
+        for event in qs:
+            if event.latitude and event.longitude:
+                dist = geodesic(user_coords, (event.latitude, event.longitude)).miles
+                if dist <= radius:
+                    filtered_ids.append(event.id)
+        qs = qs.filter(id__in=filtered_ids)
+
     return [
-    EventSchema(
-        id=event.id,
-        title=event.title,
-        description=event.description,
-        unique_aspect=event.unique_aspect,
-        occurence_date=str(event.occurence_date),
-        location=event.location or "",
-        price=float(event.price),
-        photos=event.photos or [],
-        number_of_guests=event.number_of_guests,
-        number_of_bookings=event.number_of_bookings,
-        tags=[tag.tag_name for tag in event.tags.all()] 
-    ) for event in events
-]
+        EventSchema(
+            id=event.id,
+            title=event.title,
+            description=event.description,
+            unique_aspect=event.unique_aspect,
+            occurence_date=str(event.occurence_date),
+            location=event.location or "",
+            price=float(event.price),
+            photos=event.photos or [],
+            number_of_guests=event.number_of_guests,
+            number_of_bookings=event.number_of_bookings,
+            tags=[tag.tag_name for tag in event.tags.all()]
+        ) for event in qs
+    ]
+
 
 
 @router.post("/event/create", response=EventCreateResponse)
