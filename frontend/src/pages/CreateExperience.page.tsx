@@ -75,12 +75,9 @@ export function CreateExperience() {
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
 
-      form.setValues({
-        ...form.values,
-        location: address,
-        latitude: lat,
-        longitude: lng
-      });
+      form.setFieldValue("location", address);
+      form.setFieldValue("latitude", lat);
+      form.setFieldValue("longitude", lng);
     });
   }, []);
 
