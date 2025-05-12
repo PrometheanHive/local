@@ -17,10 +17,6 @@ from django.core.mail import send_mail
 from django.db.models import Q, F
 from .models import EventTags
 from datetime import datetime
-from ninja import Router
-from typing import List, Optional
-from .models import Event
-#from .schemas import EventSchema
 from django.utils import timezone
 from geopy.distance import geodesic
 
@@ -58,6 +54,8 @@ class EventSchema(Schema):
     unique_aspect: str
     occurence_date: str
     location: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     price: float
     photos: List[str] = []
     number_of_guests: int
@@ -76,13 +74,15 @@ class EventCreateSchema(Schema):
     title: str
     description: str
     unique_aspect: str
-    occurence_date: str  # Expecting ISO string
+    occurence_date: str  # ISO string
     location: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     price: float
     number_of_guests: int
     number_of_bookings: int
     photos: List[str] = []
-    tags: List[int] = [] 
+    tags: List[int] = []
 
 class EventCreateResponse(Schema):
     message: str
@@ -311,7 +311,6 @@ def list_filtered_events(request,
 
     qs = Event.objects.all()
 
-    # Filter out past events
     now = timezone.now()
     qs = qs.filter(occurence_date__gte=now)
 
@@ -329,24 +328,24 @@ def list_filtered_events(request,
 
     if tags_include:
         include_tags = tags_include.split(",")
-        qs = qs.filter(tags__tag_name__in=include_tags).distict()
+        qs = qs.filter(tags__tag_name__in=include_tags).distinct()
 
     if tags_exclude:
         exclude_tags = tags_exclude.split(",")
         qs = qs.exclude(tags__tag_name__in=exclude_tags)
 
-    if sort_by_date:
-        qs = qs.order_by("occurence_date")
-
     if user_lat is not None and user_lon is not None and radius is not None:
         user_coords = (user_lat, user_lon)
         filtered_ids = []
         for event in qs:
-            if event.latitude and event.longitude:
+            if event.latitude is not None and event.longitude is not None:
                 dist = geodesic(user_coords, (event.latitude, event.longitude)).miles
                 if dist <= radius:
                     filtered_ids.append(event.id)
         qs = qs.filter(id__in=filtered_ids)
+
+    if sort_by_date:
+        qs = qs.order_by("occurence_date")
 
     return [
         EventSchema(
@@ -378,6 +377,8 @@ def create_event(request, payload: EventCreateSchema):
             unique_aspect=payload.unique_aspect,
             occurence_date=datetime.fromisoformat(payload.occurence_date),
             location=payload.location,
+            latitude=payload.latitude,
+            longitude=payload.longitude,
             price=payload.price,
             number_of_guests=payload.number_of_guests,
             number_of_bookings=payload.number_of_bookings,
