@@ -2,7 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CardItem } from '../components/Cards/Card';
 import Api, { API_BASE } from '@/api/API';
-import { Container, Title, Grid, Text, Badge, Group, Stack } from '@mantine/core';
+import {
+  Container,
+  Title,
+  Grid,
+  Text,
+  Badge,
+  Group,
+  Stack,
+  Button,
+  Drawer
+} from '@mantine/core';
 import { EventFilterBar } from '../components/EventFilterBar/EventFilterBar';
 
 interface Experience {
@@ -20,6 +30,8 @@ interface Experience {
 export function LandingPage() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [queryParams, setQueryParams] = useState<URLSearchParams>(new URLSearchParams());
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [filterState, setFilterState] = useState<URLSearchParams>(new URLSearchParams());
 
   const fetchExperiences = async (params: URLSearchParams) => {
     try {
@@ -38,14 +50,40 @@ export function LandingPage() {
     fetchExperiences(queryParams);
   }, [queryParams]);
 
+  const handleApplyFilters = (params: URLSearchParams) => {
+    setQueryParams(params);
+    setFilterState(new URLSearchParams(params));
+    setDrawerOpen(false);
+  };
+
+  const handleClearFilters = () => {
+    const cleared = new URLSearchParams();
+    setQueryParams(cleared);
+    setFilterState(cleared);
+  };
+
   return (
     <div className="landing-page">
       <section id="Events">
-        <Title order={1} mb="lg" style={{ marginBottom: '30px', paddingTop: '30px' }}>
-          Browse Experiences
-        </Title>
+        <Group justify="space-between" align="center" mb="md">
+          <Title order={1}>Browse Experiences</Title>
+          <Button onClick={() => setDrawerOpen(true)}>Open Filters</Button>
+        </Group>
 
-        <EventFilterBar onFilterChange={setQueryParams} />
+        <Drawer
+          opened={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          title="Filter Experiences"
+          padding="md"
+          size="md"
+          position="left"
+        >
+          <EventFilterBar
+            onFilterChange={handleApplyFilters}
+            initialParams={filterState}
+            onClear={handleClearFilters}
+          />
+        </Drawer>
 
         <Container>
           <Grid justify="center" gutter="md">
@@ -55,6 +93,7 @@ export function LandingPage() {
               </p>
             ) : (
               experiences.map((card) => {
+                if (card.number_of_guests === 0) return null;
                 const available = Math.max(0, (card.number_of_guests ?? 2) - (card.number_of_bookings ?? 0));
                 const date = card.occurence_date ? new Date(card.occurence_date).toLocaleDateString() : null;
 

@@ -19,7 +19,13 @@ declare global {
   }
 }
 
-export function EventFilterBar({ onFilterChange }: { onFilterChange: (query: URLSearchParams) => void }) {
+interface EventFilterBarProps {
+  onFilterChange: (query: URLSearchParams) => void;
+  initialParams?: URLSearchParams;
+  onClear?: () => void;
+}
+
+export function EventFilterBar({ onFilterChange, initialParams, onClear }: EventFilterBarProps) {
   const [tags, setTags] = useState<{ value: string; label: string }[]>([]);
   const [tagsInclude, setTagsInclude] = useState<string[]>([]);
   const [tagsExclude, setTagsExclude] = useState<string[]>([]);
@@ -37,6 +43,28 @@ export function EventFilterBar({ onFilterChange }: { onFilterChange: (query: URL
       setTags(tagOptions);
     });
   }, []);
+
+  useEffect(() => {
+    if (initialParams) {
+      const get = (key: string) => initialParams.get(key);
+      const getList = (key: string) => (get(key) ? get(key)!.split(",") : []);
+
+      if (get("date")) setDate(new Date(get("date")!));
+      if (get("date_after") || get("date_before")) {
+        setRange([
+          get("date_after") ? new Date(get("date_after")!) : null,
+          get("date_before") ? new Date(get("date_before")!) : null,
+        ]);
+      }
+      setTagsInclude(getList("tags_include"));
+      setTagsExclude(getList("tags_exclude"));
+      setAvailableOnly(get("available_only") === "true");
+      if (get("user_lat") && get("user_lon")) {
+        setCoords({ lat: parseFloat(get("user_lat")!), lon: parseFloat(get("user_lon")!) });
+      }
+      if (get("radius")) setRadius(get("radius")!);
+    }
+  }, [initialParams]);
 
   useEffect(() => {
     if (!window.google || !locationInputRef.current) return;
@@ -133,7 +161,10 @@ export function EventFilterBar({ onFilterChange }: { onFilterChange: (query: URL
           onChange={(e) => setAvailableOnly(e.currentTarget.checked)}
         />
       </Group>
-      <Button onClick={applyFilters}>Apply Filters</Button>
+      <Group>
+        <Button onClick={applyFilters}>Apply Filters</Button>
+        {onClear && <Button variant="outline" color="red" onClick={onClear}>Clear Filters</Button>}
+      </Group>
       <Divider />
     </Stack>
   );
