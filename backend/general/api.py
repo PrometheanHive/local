@@ -12,13 +12,13 @@ from ninja.errors import HttpError
 from datetime import datetime
 from . import models
 from django.shortcuts import get_object_or_404
-import json
 from django.core.mail import send_mail
 from django.db.models import Q, F
 from .models import EventTags
 from datetime import datetime
 from django.utils import timezone
 from geopy.distance import geodesic
+import pytz
 
 router = Router()
 UserModel = auth.get_user_model()
@@ -315,7 +315,17 @@ def list_filtered_events(request,
     qs = qs.filter(occurence_date__gte=now)
 
     if date:
-        qs = qs.filter(occurence_date__date=date)
+        from datetime import timedelta
+        from django.utils.timezone import make_aware
+
+        try:
+            parsed = datetime.strptime(date, "%Y-%m-%d")
+            mst = pytz.timezone("America/Denver")
+            start = mst.localize(parsed)
+            end = start + timedelta(days=1)
+            qs = qs.filter(occurence_date__gte=start, occurence_date__lt=end)
+        except ValueError:
+            pass
 
     if date_after:
         qs = qs.filter(occurence_date__gte=date_after)

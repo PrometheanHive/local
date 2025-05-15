@@ -44,17 +44,22 @@ export function EventFilterBar({ onFilterChange, initialParams, onClear }: Event
     });
   }, []);
 
+  const parseYMD = (str: string): Date => {
+    const [y, m, d] = str.split("-").map(Number);
+    return new Date(y, m - 1, d);  // Constructs local date safely
+  };
+
   useEffect(() => {
     if (initialParams) {
       const get = (key: string) => initialParams.get(key);
       const getList = (key: string) => (get(key) ? get(key)!.split(",") : []);
 
-      if (get("date")) setDate(new Date(get("date")!));
+      if (get("date")) setDate(parseYMD(get("date")!));
       if (get("date_after") || get("date_before")) {
         setRange([
-          get("date_after") ? new Date(get("date_after")!) : null,
-          get("date_before") ? new Date(get("date_before")!) : null,
-        ]);
+          get("date_after") ? parseYMD(get("date_after")!) : null,
+          get("date_before") ? parseYMD(get("date_before")!) : null,
+        ]);        
       }
       setTagsInclude(getList("tags_include"));
       setTagsExclude(getList("tags_exclude"));
@@ -62,6 +67,7 @@ export function EventFilterBar({ onFilterChange, initialParams, onClear }: Event
       if (get("user_lat") && get("user_lon")) {
         setCoords({ lat: parseFloat(get("user_lat")!), lon: parseFloat(get("user_lon")!) });
       }
+      if (get("location")) setLocationName(get("location")!);
       if (get("radius")) setRadius(get("radius")!);
     }
   }, [initialParams]);
@@ -89,18 +95,21 @@ export function EventFilterBar({ onFilterChange, initialParams, onClear }: Event
     });
   }, [locationInputRef]);
 
+  const formatDate = (d: Date) => d.toLocaleDateString("sv-SE"); // YYYY-MM-DD
+
   const applyFilters = () => {
     const params = new URLSearchParams();
-    if (date) params.append("date", date.toISOString().split("T")[0]);
-    if (range[0]) params.append("date_after", range[0].toISOString());
-    if (range[1]) params.append("date_before", range[1].toISOString());
+    if (date) params.append("date", formatDate(date));
+    if (range[0]) params.append("date_after", formatDate(range[0]));
+    if (range[1]) params.append("date_before", formatDate(range[1]));
     if (tagsInclude.length > 0) params.append("tags_include", tagsInclude.join(","));
     if (tagsExclude.length > 0) params.append("tags_exclude", tagsExclude.join(","));
     if (availableOnly) params.append("available_only", "true");
-    if (coords) {
+    if (coords && locationName) {
       params.append("user_lat", coords.lat.toString());
       params.append("user_lon", coords.lon.toString());
       params.append("radius", radius);
+      params.append("location", locationName);
     }
     params.append("sort_by_date", "true");
     onFilterChange(params);
