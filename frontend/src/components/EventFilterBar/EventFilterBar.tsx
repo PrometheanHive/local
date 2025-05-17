@@ -36,6 +36,7 @@ export function EventFilterBar({ onFilterChange, initialParams, onClear }: Event
   const [locationName, setLocationName] = useState<string>("");
   const [availableOnly, setAvailableOnly] = useState(false);
   const locationInputRef = useRef<HTMLInputElement | null>(null);
+  const [showOld, setShowOld] = useState(false);
 
   useEffect(() => {
     Api.instance.get(`${API_BASE}/general/tags`).then((res) => {
@@ -53,7 +54,7 @@ export function EventFilterBar({ onFilterChange, initialParams, onClear }: Event
     if (initialParams) {
       const get = (key: string) => initialParams.get(key);
       const getList = (key: string) => (get(key) ? get(key)!.split(",") : []);
-
+      
       if (get("date")) setDate(parseYMD(get("date")!));
       if (get("date_after") || get("date_before")) {
         setRange([
@@ -69,6 +70,9 @@ export function EventFilterBar({ onFilterChange, initialParams, onClear }: Event
       }
       if (get("location")) setLocationName(get("location")!);
       if (get("radius")) setRadius(get("radius")!);
+
+      setShowOld(get("show_old") === "true");
+      
     }
   }, [initialParams]);
 
@@ -111,6 +115,7 @@ export function EventFilterBar({ onFilterChange, initialParams, onClear }: Event
       params.append("radius", radius);
       params.append("location", locationName);
     }
+    if (showOld) params.append("show_old", "true");
     params.append("sort_by_date", "true");
     onFilterChange(params);
   };
@@ -168,6 +173,11 @@ export function EventFilterBar({ onFilterChange, initialParams, onClear }: Event
           label="Available only"
           checked={availableOnly}
           onChange={(e) => setAvailableOnly(e.currentTarget.checked)}
+        />
+        <Checkbox
+          label="Include Past Events"
+          checked={showOld}
+          onChange={(e) => setShowOld(e.currentTarget.checked)}
         />
       </Group>
       <Group>

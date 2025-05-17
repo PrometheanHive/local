@@ -307,12 +307,14 @@ def list_filtered_events(request,
                          available_only: Optional[bool] = False,
                          sort_by_date: Optional[bool] = True,
                          user_lat: Optional[float] = None,
-                         user_lon: Optional[float] = None):
+                         user_lon: Optional[float] = None,
+                         show_old: Optional[bool] = True):
 
     qs = Event.objects.all()
 
     now = timezone.now()
-    qs = qs.filter(occurence_date__gte=now)
+    if not show_old:
+        qs = qs.filter(occurence_date__gte=now)
 
     if date:
         from datetime import timedelta

@@ -1,0 +1,1 @@
+sudo docker exec -it backend_locale python manage.py seed_tags
