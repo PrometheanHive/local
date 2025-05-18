@@ -23,12 +23,13 @@ export function SingleExperiencePage() {
       const reviewsResponse = await Api.instance.get<Review[]>(`${API_BASE}/general/event/${id}/reviews`);
       const reviewsData = reviewsResponse.data;
 
-      // Ensure `host_first_name` and `photos` are always defined
+      // Ensure `host_first_name`, `photos`, and `tags` are always defined
       const combinedData: ExperienceData = {
         ...eventData,
         host_first_name: eventData.host_first_name || "Unknown Host", // Default value
         photos: eventData.photos ?? [], // Ensure `photos` is always a `string[]`
-        reviews: reviewsData
+        reviews: reviewsData,
+        tags: eventData.tags ?? [] // Ensure tags is always a list
       };
 
       setExperience(combinedData);

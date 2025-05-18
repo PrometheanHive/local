@@ -8,3 +8,6 @@ python-dotenv
 google-auth
 python-jose
 requests
+psycopg2-binary
+geopy>=2.4.0
+pytz>=2024.1
