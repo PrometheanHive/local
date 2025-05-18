@@ -308,7 +308,8 @@ def list_filtered_events(request,
                          sort_by_date: Optional[bool] = True,
                          user_lat: Optional[float] = None,
                          user_lon: Optional[float] = None,
-                         show_old: Optional[bool] = True):
+                         show_old: Optional[bool] = True
+                         ):
 
     qs = Event.objects.all()
 

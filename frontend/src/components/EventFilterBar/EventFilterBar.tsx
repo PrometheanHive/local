@@ -36,7 +36,11 @@ export function EventFilterBar({ onFilterChange, initialParams, onClear }: Event
   const [locationName, setLocationName] = useState<string>("");
   const [availableOnly, setAvailableOnly] = useState(false);
   const locationInputRef = useRef<HTMLInputElement | null>(null);
-  const [showOld, setShowOld] = useState(false);
+  const [showOld, setShowOld] = useState(() => {
+    const defaultFromParams =
+      initialParams?.get("show_old") === "true";
+    return initialParams ? defaultFromParams : true;
+  });
 
   useEffect(() => {
     Api.instance.get(`${API_BASE}/general/tags`).then((res) => {
