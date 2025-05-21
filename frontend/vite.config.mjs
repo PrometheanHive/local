@@ -32,7 +32,7 @@ export default defineConfig({
       process.env.NODE_ENV === 'production'
         ? {
             protocol: 'wss', // AWS ALB terminates HTTPS, use secure WebSockets
-            host: 'demo.experiencebylocals.com',
+            host: 'dev.experiencebylocals.com',
             port: 443,
             clientPort: 443, // Ensure frontend connects properly
           }

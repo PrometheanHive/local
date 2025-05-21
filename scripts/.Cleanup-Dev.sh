@@ -6,3 +6,5 @@ sudo rm -rf backend/__pycache__/
 sudo docker volume prune -f
 sudo docker volume rm local_frontend_build 
 sudo docker volume rm local_backend_static
+sudo docker compose build
+sudo docker compose up
