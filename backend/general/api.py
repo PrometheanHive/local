@@ -18,7 +18,7 @@ from .models import EventTags
 from datetime import datetime
 from django.utils import timezone
 from geopy.distance import geodesic
-import pytzfrom 
+import pytz 
 from typing import Literal
 import requests
 from google.oauth2 import id_token as google_id_token
@@ -249,6 +249,10 @@ def authenticate_user(request, payload: UserAuthSchema):
     else:
         return json_response({"error": "Invalid username or password"}, status=401)
 
+@router.get("/user/exists-by-email")
+def check_user_exists_by_email(request, email: str):
+    exists = get_user_model().objects.filter(email=email).exists()
+    return {"exists": exists}
 
 @router.post("/user/oauth-login")
 def oauth_login(request, payload: OAuthSchema):
