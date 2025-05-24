@@ -7,8 +7,7 @@ import { jwtDecode } from 'jwt-decode';
 import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
 import { AccountSettings } from './AccountSettings';
-import { initializeCometChat, ensureCometChatLoggedIn } from '@/services/cometchatService';
-import { CometChatUIKit } from "@cometchat/chat-uikit-react";
+import { loginUserByEmail } from '@/services/cometchatService';
 
 export function SignIn() {
     const [email, setEmail] = useState<string>("");
@@ -40,19 +39,19 @@ export function SignIn() {
                     token: credentialResponse.credential
                 }, { withCredentials: true });
 
-                await initializeCometChat();
+                // await initializeCometChat();
 
-                CometChatUIKit.getLoggedinUser().then((user) => {
-                    if (!user) {
-                        const cometChatLogin = email.replace(/[@.]/g, '');
-                        CometChatUIKit.login(cometChatLogin)
-                            .then((user) => console.log("CometChat: Login Successful:", { user }))
-                            .catch((error) => {
-                                console.error("CometChat: login failed:", error);
-                                setError("CometChat: Incorrect username/password");
-                            });
-                    }
-                });
+                // CometChatUIKit.getLoggedinUser().then((user) => {
+                //     if (!user) {
+                //         const cometChatLogin = email.replace(/[@.]/g, '');
+                //         CometChatUIKit.login(cometChatLogin)
+                //             .then((user) => console.log("CometChat: Login Successful:", { user }))
+                //             .catch((error) => {
+                //                 console.error("CometChat: login failed:", error);
+                //                 setError("CometChat: Incorrect username/password");
+                //             });
+                //     }
+                // });
 
             }
                 
@@ -85,7 +84,7 @@ export function SignIn() {
                     console.error("❌ Failed to fetch full user data after login:", err);
                     setError("Failed to complete login.");
                 }
-                await ensureCometChatLoggedIn(email);
+                await loginUserByEmail(email);
 
                 // Redirect to homepage and refresh to reflect login state
                 //window.location.href = '/';

@@ -1,81 +1,61 @@
-import { CometChatUIKit, UIKitSettingsBuilder } from "@cometchat/chat-uikit-react";
-import { CometChat } from "@cometchat/chat-sdk-javascript";
+import { CometChat } from '@cometchat/chat-sdk-javascript';
 
+const authKey = import.meta.env.VITE_COMETCHAT_AUTH_KEY;
 
-interface CreateChatUserParams {
-  email: string;
-  firstName: string;
-  lastName: string;
-  onSuccess?: () => void;
-  onError?: (error: any) => void;
+/**
+ * Sanitizes an email address into a UID usable by CometChat.
+ * Replaces "@" and "." with empty strings.
+ */
+export function sanitizeEmailToUID(email: string): string {
+  return email.replace(/[@.]/g, '');
 }
 
-const COMETCHAT_CONSTANTS = {
-  APP_ID: import.meta.env.VITE_COMETCHAT_APP_ID,
-  REGION: import.meta.env.VITE_COMETCHAT_REGION,
-  AUTH_KEY: import.meta.env.VITE_COMETCHAT_AUTH_KEY
-};
+/**
+ * Creates a user in CometChat using the sanitized UID and full name.
+ */
+export async function createUserFromEmail(email: string, fullName: string) {
+  const uid = sanitizeEmailToUID(email);
+  const user = new CometChat.User(uid);
+  user.setName(fullName);
 
-
-let initialized = false;
-
-export async function initializeCometChat() {
-    if (initialized) return;
-    const settings = new UIKitSettingsBuilder()
-      .setAppId(COMETCHAT_CONSTANTS.APP_ID)
-      .setRegion(COMETCHAT_CONSTANTS.REGION)
-      .setAuthKey(COMETCHAT_CONSTANTS.AUTH_KEY)
-      .subscribePresenceForFriends()
-      .build();
-  
-    await CometChatUIKit.init(settings);
-    initialized = true;
-    console.log("✅ CometChat initialized");
-  }
-  
-  export async function ensureCometChatLoggedIn(email: string) {
-    await initializeCometChat();
-    const uid = email.replace(/[@.]/g, "");
-    const current = await CometChat.getLoggedinUser();
-    if (!current || current.getUid() !== uid) {
-      if (current) await CometChat.logout();
-      await CometChat.login(uid);
-      console.log(`✅ CometChat logged in as: ${uid}`);
-    }
-  }
-
-
-export async function createCometChatUserAndLogin({
-  email,
-  firstName,
-  lastName,
-  onSuccess,
-  onError
-}: CreateChatUserParams) {
   try {
-    const uid = email.replace(/[@.]/g, "");
-    await initializeCometChat();
-
-    const chatUser = new CometChat.User(uid);
-    chatUser.setName(`${firstName} ${lastName}`);
-
-    try {
-      await CometChatUIKit.createUser(chatUser);
-      console.log("✅ CometChat user created");
-    } catch (err: any) {
-      if (err?.code === "ERR_UID_ALREADY_EXISTS") {
-        console.warn("⚠️ CometChat user already exists, continuing to login");
-      } else {
-        throw err;
-      }
+    const createdUser = await CometChat.createUser(user, authKey);
+    console.log('✅ CometChat user created:', createdUser);
+    return createdUser;
+  } catch (error: any) {
+    if (error?.code === 'ERR_UID_ALREADY_EXISTS') {
+      console.warn('⚠️ CometChat user already exists, skipping creation');
+      return user;
     }
+    console.error('❌ Failed to create CometChat user:', error);
+    throw error;
+  }
+}
 
-    await CometChat.login(uid, import.meta.env.VITE_COMETCHAT_AUTH_KEY);
-    console.log("✅ CometChat login successful");
-
-    if (onSuccess) onSuccess();
+/**
+ * Logs a user into CometChat using their sanitized UID.
+ */
+export async function loginUserByEmail(email: string) {
+  const uid = sanitizeEmailToUID(email);
+  try {
+    const user = await CometChat.login(uid, authKey);
+    console.log('✅ CometChat login successful:', user);
+    return user;
   } catch (error) {
-    console.error("❌ CometChat user creation/login failed:", error);
-    if (onError) onError(error);
+    console.error('❌ CometChat login failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Logs the user out of CometChat.
+ */
+export async function logoutCometChatUser() {
+  try {
+    await CometChat.logout();
+    console.log('✅ CometChat logout successful');
+  } catch (error) {
+    console.error('❌ CometChat logout failed:', error);
+    throw error;
   }
 }
