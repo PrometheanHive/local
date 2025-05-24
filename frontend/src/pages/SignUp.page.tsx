@@ -1,4 +1,5 @@
-// SignUp.page.tsx
+// SignUp.page.tsx (Full Updated with Google OAuth and CometChat)
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -8,8 +9,9 @@ import {
 import { GoogleLogin } from '@react-oauth/google';
 import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
+import { CometChat } from "@cometchat/chat-sdk-javascript";
 import { CometChatUIKit } from "@cometchat/chat-uikit-react";
-import { initializeCometChat } from "@/services/cometchatService";
+import { initializeCometChat, createCometChatUserAndLogin } from "@/services/cometchatService";
 
 export function SignUp() {
   const [email, setEmail] = useState("");
@@ -18,7 +20,7 @@ export function SignUp() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [bio, setBio] = useState("");
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   const auth = useAuth();
   const setUser = auth?.setUser || (() => {});
 
@@ -30,9 +32,42 @@ export function SignUp() {
       }, { withCredentials: true });
 
       if (response.data?.user) {
-        setUser(response.data.user);
+        const newUser = response.data.user;
+        setUser(newUser);
         await initializeCometChat();
-        window.location.href = '/';
+        const cometChatLogin = email.replace(/[@.]/g, '');
+        const chatUser = new CometChat.User(cometChatLogin);
+        chatUser.setName(`${firstName} ${lastName}`);
+
+        CometChatUIKit.createUser(chatUser).then(() => {
+          console.log("✅ CometChat user created");
+
+          CometChatUIKit.login(cometChatLogin)
+            .then((ccUser) => {
+              console.log("✅ CometChat login successful", ccUser);
+              window.location.href = '/'; // Safe to navigate now
+            })
+            .catch((err) => {
+              console.error("❌ CometChat login failed", err);
+            });
+
+        }).catch((err) => {
+          if (err?.code === 'ERR_UID_ALREADY_EXISTS') {
+            console.warn("⚠️ CometChat user already exists, logging in instead");
+
+            CometChatUIKit.login(cometChatLogin)
+              .then((ccUser) => {
+                console.log("✅ CometChat login successful (existing user)", ccUser);
+                window.location.href = '/';
+              })
+              .catch((loginErr) => {
+                console.error("❌ CometChat login failed (existing user)", loginErr);
+              });
+
+          } else {
+            console.error("❌ CometChat user creation failed", err);
+          }
+        });
       }
     } catch (err) {
       console.error("Google sign-up failed", err);
@@ -63,13 +98,18 @@ export function SignUp() {
         withCredentials: true
       });
 
-      if (loginResponse.data?.user_id) {
+      if (loginResponse.data && loginResponse.data.user_id) {
         setUser(loginResponse.data.user_id);
-        await initializeCometChat();
-        window.location.href = '/';
+        await createCometChatUserAndLogin({
+          email,
+          firstName,
+          lastName,
+          onSuccess: () => window.location.href = '/',
+          onError: (error) => console.error("❌ CometChat setup failed during sign-up:", error)
+        });
       }
-    } catch (err) {
-      console.error("Signup error:", err);
+    } catch (error) {
+      console.error("Signup or login failed:", error);
     }
   };
 
@@ -91,7 +131,7 @@ export function SignUp() {
           <Button type="submit" fullWidth mt="lg">Sign Up</Button>
         </form>
         <Divider my="lg" label="or" labelPosition="center" />
-        <GoogleLogin onSuccess={handleGoogleSignup} onError={() => console.error("Google Sign-Up failed")}/>
+        <GoogleLogin onSuccess={handleGoogleSignup} onError={() => console.error("Google Sign-Up failed")} />
         <Text size="sm" mt="sm">
           Already have an account? <Link to="/sign-in">Log In</Link>
         </Text>

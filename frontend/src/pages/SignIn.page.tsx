@@ -1,54 +1,100 @@
+// SignIn.page.tsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Paper, Title, Text, TextInput, PasswordInput, Button, Divider } from '@mantine/core';
-import { GoogleLogin, googleLogout } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
-import { CometChatUIKit } from "@cometchat/chat-uikit-react";
 import { AccountSettings } from './AccountSettings';
-import { initializeCometChat } from "@/services/cometchatService";
+import { initializeCometChat, ensureCometChatLoggedIn } from '@/services/cometchatService';
+import { CometChatUIKit } from "@cometchat/chat-uikit-react";
 
 export function SignIn() {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
-    
+
     const auth = useAuth();
     const user = auth?.user || null;
     const setUser = auth?.setUser || (() => {});
 
     const handleGoogleLogin = async (credentialResponse: any) => {
         try {
-            const response = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
-                provider: "google",
-                token: credentialResponse.credential
-            }, { withCredentials: true });
+            const decoded: any = jwtDecode(credentialResponse.credential);
+            const email = decoded.email;
 
-            if (response.data?.user) {
-                setUser(response.data.user);
+            // Step 1: Check if user exists in backend DB
+            const existsRes = await Api.instance.get(`${API_BASE}/general/user/exists-by-email`, {
+                params: { email },
+                withCredentials: true
+            });
+
+            if (!existsRes.data?.exists) {
+                setError("Google account not registered. Please sign up first.");
+                return;
+            } else {
+                // Step 2: Proceed with OAuth login
+                const response = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
+                    provider: "google",
+                    token: credentialResponse.credential
+                }, { withCredentials: true });
+
                 await initializeCometChat();
-                window.location.href = '/';
+
+                CometChatUIKit.getLoggedinUser().then((user) => {
+                    if (!user) {
+                        const cometChatLogin = email.replace(/[@.]/g, '');
+                        CometChatUIKit.login(cometChatLogin)
+                            .then((user) => console.log("CometChat: Login Successful:", { user }))
+                            .catch((error) => {
+                                console.error("CometChat: login failed:", error);
+                                setError("CometChat: Incorrect username/password");
+                            });
+                    }
+                });
+
             }
-        } catch (err) {
-            console.error("OAuth login failed", err);
-            setError("Google sign-in failed");
-        }
+                
+            } catch (err) {
+                console.error("OAuth login failed", err);
+                setError("Google sign-in failed");
+            }
     };
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
+        const values = { username: email, password: password };
+        console.log("Attempting login...");
+    
         try {
-            const response = await Api.instance.post(`${API_BASE}/general/user/authenticate`, { username: email, password }, { withCredentials: true });
-            if (response.data?.user_id) {
-                const userRes = await Api.instance.get(`${API_BASE}/general/user/${response.data.user_id}`, { withCredentials: true });
-                setUser(userRes.data);
-                await initializeCometChat();
-                window.location.href = '/';
+            const response = await Api.instance.post(`${API_BASE}/general/user/authenticate`, values, { withCredentials: true });
+
+            if (response.data && response.data.user_id) {
+                try {
+                    const userRes = await Api.instance.get(`${API_BASE}/general/user/${response.data.user_id}`, {
+                      withCredentials: true,
+                    });
+                
+                    const fullUser = userRes.data;
+                    console.log("✅ Full user fetched after login:", fullUser);
+                    setUser(fullUser); // now you’re setting the correct full object
+                
+                    // Optional: show a message or redirect later
+                } catch (err) {
+                    console.error("❌ Failed to fetch full user data after login:", err);
+                    setError("Failed to complete login.");
+                }
+                await ensureCometChatLoggedIn(email);
+
+                // Redirect to homepage and refresh to reflect login state
+                //window.location.href = '/';
             } else {
                 setError("Incorrect username/password");
             }
+
         } catch (error) {
-            console.error('Login failed:', error);
+            console.error('Login request failed:', error);
             setError("Incorrect username/password");
         }
     };
