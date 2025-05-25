@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import { CometChat } from "@cometchat/chat-sdk-javascript";
 import {
   Container,
@@ -13,8 +14,14 @@ import {
 } from '@mantine/core';
 import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
-import { CometChatMessages } from "@cometchat/chat-uikit-react";
-import { ensureCometChatLoggedIn } from '@/services/cometchatService'; // ✅ new import
+import { CometChatMessages, UIKitSettingsBuilder, CometChatUIKit } from "@cometchat/chat-uikit-react";
+import { loginUserByEmail, sanitizeEmailToUID } from '@/services/cometchatService';
+
+const COMETCHAT_CONSTANTS = {
+  APP_ID: import.meta.env.VITE_COMETCHAT_APP_ID,
+  REGION: import.meta.env.VITE_COMETCHAT_REGION,
+  AUTH_KEY: import.meta.env.VITE_COMETCHAT_AUTH_KEY,
+};
 
 export function MessagesPage() {
   const { user, isLoading } = useAuth();
@@ -23,53 +30,51 @@ export function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  console.log("📦 Rendered MessagesPage");
-  console.log("🧠 user:", user);
-  console.log("🔄 isLoading (from auth):", isLoading);
-
-  // ✅ Protect CometChat logic behind auth-ready guard
   useEffect(() => {
     if (isLoading || !user) return;
 
     const loadUsers = async () => {
       try {
-        const cometChatUID = user.email.replace(/[@.]/g, '');
-        await ensureCometChatLoggedIn(user.email); // ✅ central init + login
+        const uid = sanitizeEmailToUID(user.email);
+        console.log("Printing Constants:", COMETCHAT_CONSTANTS);
+        const settings = new UIKitSettingsBuilder()
+          .setAppId(COMETCHAT_CONSTANTS.APP_ID)
+          .setRegion(COMETCHAT_CONSTANTS.REGION)
+          .setAuthKey(COMETCHAT_CONSTANTS.AUTH_KEY)
+          .subscribePresenceForAllUsers()
+          .build();
 
-        console.log("🌐 Fetching allowed UIDs from backend...");
+        await CometChatUIKit.init(settings);
+        console.log("✅ CometChat UIKit initialized inside MessagesPage");
+
+        await loginUserByEmail(user.email);
+
         const response = await Api.instance.get<string[]>(
           `${API_BASE}/general/messaging/allowed-uids`,
           { withCredentials: true }
         );
 
         const allowedUIDs = response.data;
-        console.log("🎯 Backend returned allowed UIDs:", allowedUIDs);
 
         if (!Array.isArray(allowedUIDs) || allowedUIDs.length === 0) {
-          console.warn("🚫 No allowed UIDs to display.");
           setAllowedUsers([]);
           setLoading(false);
           return;
         }
 
-        console.log("📡 Fetching user info from CometChat for allowed UIDs...");
         const usersRequest = new CometChat.UsersRequestBuilder()
           .setUIDs(allowedUIDs)
           .setLimit(50)
           .build();
 
         const fetchedUsers: CometChat.User[] = await usersRequest.fetchNext();
-        console.log("👥 Fetched users from CometChat:", fetchedUsers.map(u => u.getUid()));
-
-        const visibleUsers = fetchedUsers.filter(u => u.getUid() !== cometChatUID);
-        console.log("🙈 Filtered out self. Final users to display:", visibleUsers.map(u => u.getUid()));
+        const visibleUsers = fetchedUsers.filter(u => u.getUid() !== uid);
 
         setAllowedUsers(visibleUsers);
       } catch (err) {
         console.error("❌ Failed to load messages page:", err);
         setError("Failed to load users.");
       } finally {
-        console.log("✅ Finished loading");
         setLoading(false);
       }
     };
@@ -77,7 +82,7 @@ export function MessagesPage() {
     loadUsers();
   }, [isLoading, user]);
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
       <Center style={{ height: "100vh" }}>
         <Loader size="xl" />
@@ -86,26 +91,12 @@ export function MessagesPage() {
   }
 
   if (error) {
-    console.warn("🛑 Rendering error fallback");
     return (
       <Center style={{ height: "100vh" }}>
         <Text c="red">{error}</Text>
       </Center>
     );
   }
-
-  if (loading) {
-    console.log("⏳ Still loading...");
-    return (
-      <Center style={{ height: "100vh" }}>
-        <Loader size="xl" />
-      </Center>
-    );
-  }
-
-  console.log("✅ Ready to render UI");
-  console.log("🎈 Active user:", activeUser?.getUid());
-  console.log("💬 Allowed users available:", allowedUsers.length);
 
   return (
     <Container my={40}>
@@ -115,38 +106,29 @@ export function MessagesPage() {
           {allowedUsers.length === 0 ? (
             <Text c="dimmed">You haven't started any conversations yet.</Text>
           ) : (
-            allowedUsers.map((user) => {
-              console.log("🖱️ Rendering conversation card for:", user.getUid());
-              return (
-                <Card
-                  key={user.getUid()}
-                  shadow="sm"
-                  withBorder
-                  p="md"
-                  mb="md"
-                  onClick={() => {
-                    console.log("🟢 User clicked:", user.getUid());
-                    setActiveUser(user);
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <Group align="center">
-                    <Avatar src={user.getAvatar()} radius="xl" />
-                    <Text fw={500}>{user.getName()}</Text>
-                  </Group>
-                </Card>
-              );
-            })
+            allowedUsers.map((user) => (
+              <Card
+                key={user.getUid()}
+                shadow="sm"
+                withBorder
+                p="md"
+                mb="md"
+                onClick={() => setActiveUser(user)}
+                style={{ cursor: 'pointer' }}
+              >
+                <Group align="center">
+                  <Avatar src={user.getAvatar()} radius="xl" />
+                  <Text fw={500}>{user.getName()}</Text>
+                </Group>
+              </Card>
+            ))
           )}
         </>
       ) : (
         <>
           <Group justify="space-between" mb="md">
             <Title order={3}>Chatting with {activeUser.getName()}</Title>
-            <Button variant="light" onClick={() => {
-              console.log("🔙 Returning to list view");
-              setActiveUser(null);
-            }}>
+            <Button variant="light" onClick={() => setActiveUser(null)}>
               Back to list
             </Button>
           </Group>

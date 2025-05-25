@@ -13,34 +13,28 @@ export function sanitizeEmailToUID(email: string): string {
 /**
  * Creates a user in CometChat using the sanitized UID and full name.
  */
-export async function createUserFromEmail(email: string, fullName: string) {
-  const uid = sanitizeEmailToUID(email);
-  const user = new CometChat.User(uid);
-  user.setName(fullName);
+export async function createUserFromEmail(email: string, firstName: string) {
+  try { 
+    const uid = sanitizeEmailToUID(email);
+    console.log('Attempting CometChat user creation');
+    const user = new CometChat.User(uid);
+    user.setName(firstName);
 
-  try {
-    const createdUser = await CometChat.createUser(user, authKey);
-    console.log('✅ CometChat user created:', createdUser);
-    return createdUser;
-  } catch (error: any) {
-    if (error?.code === 'ERR_UID_ALREADY_EXISTS') {
-      console.warn('⚠️ CometChat user already exists, skipping creation');
-      return user;
-    }
-    console.error('❌ Failed to create CometChat user:', error);
-    throw error;
-  }
+    await CometChat.createUser(user, authKey);
+    console.log('✅ CometChat user created');
+  } catch (error) {console.log('❌ CometChat user creation failed');}
 }
 
 /**
  * Logs a user into CometChat using their sanitized UID.
  */
 export async function loginUserByEmail(email: string) {
+  console.log('Attempting CometChat login');
+
   const uid = sanitizeEmailToUID(email);
   try {
     const user = await CometChat.login(uid, authKey);
     console.log('✅ CometChat login successful:', user);
-    return user;
   } catch (error) {
     console.error('❌ CometChat login failed:', error);
     throw error;

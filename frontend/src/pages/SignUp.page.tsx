@@ -9,8 +9,6 @@ import {
 import { GoogleLogin } from '@react-oauth/google';
 import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
-import { CometChat } from "@cometchat/chat-sdk-javascript";
-import { CometChatUIKit } from "@cometchat/chat-uikit-react";
 import { createUserFromEmail, loginUserByEmail } from '@/services/cometchatService';
 
 export function SignUp() {
@@ -98,16 +96,9 @@ export function SignUp() {
         withCredentials: true
       });
 
-      if (loginResponse.data && loginResponse.data.user_id) {
-        setUser(loginResponse.data.user_id);
-        try {
-          await createUserFromEmail(email, `${firstName} ${lastName}`);
-          await loginUserByEmail(email);
-          window.location.href = '/';
-        } catch (error) {
-          console.error("❌ CometChat setup failed during sign-up:", error);
-        }
-      }
+      await createUserFromEmail(email, firstName);
+      await loginUserByEmail(email);
+
     } catch (error) {
       console.error("Signup or login failed:", error);
     }
