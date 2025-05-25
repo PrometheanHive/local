@@ -20,46 +20,45 @@ export function SignIn() {
 
     const handleGoogleLogin = async (credentialResponse: any) => {
         try {
-            const decoded: any = jwtDecode(credentialResponse.credential);
-            const email = decoded.email;
-
-            // Step 1: Check if user exists in backend DB
-            const existsRes = await Api.instance.get(`${API_BASE}/general/user/exists-by-email`, {
-                params: { email },
-                withCredentials: true
-            });
-
-            if (!existsRes.data?.exists) {
-                setError("Google account not registered. Please sign up first.");
-                return;
-            } else {
-                // Step 2: Proceed with OAuth login
-                const response = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
-                    provider: "google",
-                    token: credentialResponse.credential
-                }, { withCredentials: true });
-
-                // await initializeCometChat();
-
-                // CometChatUIKit.getLoggedinUser().then((user) => {
-                //     if (!user) {
-                //         const cometChatLogin = email.replace(/[@.]/g, '');
-                //         CometChatUIKit.login(cometChatLogin)
-                //             .then((user) => console.log("CometChat: Login Successful:", { user }))
-                //             .catch((error) => {
-                //                 console.error("CometChat: login failed:", error);
-                //                 setError("CometChat: Incorrect username/password");
-                //             });
-                //     }
-                // });
-
-            }
-                
-            } catch (err) {
-                console.error("OAuth login failed", err);
-                setError("Google sign-in failed");
-            }
-    };
+          const decoded: any = jwtDecode(credentialResponse.credential);
+          const email = decoded.email;
+      
+          // Step 1: Check if user exists in backend DB
+          const existsRes = await Api.instance.get(`${API_BASE}/general/user/exists-by-email`, {
+            params: { email },
+            withCredentials: true
+          });
+      
+          if (!existsRes.data?.exists) {
+            setError("Google account not registered. Please sign up first.");
+            return;
+          }
+      
+          // Step 2: OAuth login with backend
+          const response = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
+            provider: "google",
+            token: credentialResponse.credential
+          }, { withCredentials: true });
+      
+          if (response.data?.user) {
+            const user = response.data.user;
+            setUser(user);
+      
+            // Step 3: Login to CometChat using email
+            await loginUserByEmail(email);
+      
+            // Step 4: Navigate to account page
+            window.location.href = '/account-settings';
+          } else {
+            setError("Login failed. Please try again.");
+          }
+      
+        } catch (err) {
+          console.error("OAuth login failed:", err);
+          setError("Google sign-in failed");
+        }
+      };
+      
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -87,7 +86,7 @@ export function SignIn() {
                 await loginUserByEmail(email);
 
                 // Redirect to homepage and refresh to reflect login state
-                //window.location.href = '/';
+                window.location.href = '/';
             } else {
                 setError("Incorrect username/password");
             }

@@ -10,6 +10,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
 import { createUserFromEmail, loginUserByEmail } from '@/services/cometchatService';
+import { jwtDecode } from 'jwt-decode';
 
 export function SignUp() {
   const [email, setEmail] = useState("");
@@ -24,51 +25,30 @@ export function SignUp() {
 
   const handleGoogleSignup = async (credentialResponse: any) => {
     try {
+      const decoded: any = jwtDecode(credentialResponse.credential);
+      const email = decoded.email;
+      const firstName = decoded.given_name || "";
+      const lastName = decoded.family_name || "";
+  
       const response = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
         provider: "google",
         token: credentialResponse.credential
       }, { withCredentials: true });
-
+  
       if (response.data?.user) {
-        // const newUser = response.data.user;
-        // setUser(newUser);
-        // await initializeCometChat();
-        // const cometChatLogin = email.replace(/[@.]/g, '');
-        // const chatUser = new CometChat.User(cometChatLogin);
-        // chatUser.setName(`${firstName} ${lastName}`);
-
-        // CometChatUIKit.createUser(chatUser).then(() => {
-        //   console.log("✅ CometChat user created");
-
-        //   CometChatUIKit.login(cometChatLogin)
-        //     .then((ccUser) => {
-        //       console.log("✅ CometChat login successful", ccUser);
-        //       window.location.href = '/'; // Safe to navigate now
-        //     })
-        //     .catch((err) => {
-        //       console.error("❌ CometChat login failed", err);
-        //     });
-
-        // }).catch((err) => {
-        //   if (err?.code === 'ERR_UID_ALREADY_EXISTS') {
-        //     console.warn("⚠️ CometChat user already exists, logging in instead");
-
-        //     CometChatUIKit.login(cometChatLogin)
-        //       .then((ccUser) => {
-        //         console.log("✅ CometChat login successful (existing user)", ccUser);
-        //         window.location.href = '/';
-        //       })
-        //       .catch((loginErr) => {
-        //         console.error("❌ CometChat login failed (existing user)", loginErr);
-        //       });
-
-        //   } else {
-        //     console.error("❌ CometChat user creation failed", err);
-        //   }
-        // });
+        const user = response.data.user;
+        setUser(user); // update app context
+  
+        // 🧠 Combine full name for CometChat display
+        const fullName = `${firstName} ${lastName}`.trim();
+  
+        await createUserFromEmail(email, fullName); // creates CometChat user
+        await loginUserByEmail(email); // logs into CometChat
+  
+        window.location.href = '/account-settings';
       }
     } catch (err) {
-      console.error("Google sign-up failed", err);
+      console.error("Google sign-up failed:", err);
     }
   };
 
@@ -95,8 +75,8 @@ export function SignUp() {
       }, {
         withCredentials: true
       });
-      console.log("Printing email, firstname:", email, firstName);
-      await createUserFromEmail(email, firstName);
+      const fullName = `${firstName} ${lastName}`.trim();
+      await createUserFromEmail(email, fullName);
       await loginUserByEmail(email);
       window.location.href = '/account-settings';
     } catch (error) {
