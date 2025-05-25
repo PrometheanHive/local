@@ -62,6 +62,7 @@ class EventSchema(Schema):
     number_of_bookings: int
     tags: List[str] = []
     external_booking_url: Optional[str] = None
+    
 
 
 class BookingSchema(Schema):
@@ -311,8 +312,8 @@ def list_filtered_events(request,
                          user_lat: Optional[float] = None,
                          user_lon: Optional[float] = None):
 
-    qs = Event.objects.all()
-
+    # Start with only approved events in the future
+    qs = Event.objects.filter(approved=True)  # ✅ NEW: only include approved events
     now = timezone.now()
     qs = qs.filter(occurence_date__gte=now)
 
@@ -347,6 +348,7 @@ def list_filtered_events(request,
         qs = qs.exclude(tags__tag_name__in=exclude_tags)
 
     if user_lat is not None and user_lon is not None and radius is not None:
+        from geopy.distance import geodesic
         user_coords = (user_lat, user_lon)
         filtered_ids = []
         for event in qs:
@@ -372,7 +374,8 @@ def list_filtered_events(request,
             number_of_guests=event.number_of_guests,
             number_of_bookings=event.number_of_bookings,
             tags=[tag.tag_name for tag in event.tags.all()]
-        ) for event in qs
+        )
+        for event in qs
     ]
 
 
