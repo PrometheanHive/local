@@ -19,6 +19,8 @@ export interface Review {
     host_last_name: string;
     host_profile_pic?: string;
     host_id?: number;
+    tags?: string[];
+    external_booking_url?: string;
   }
   
   

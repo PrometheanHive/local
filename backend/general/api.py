@@ -12,10 +12,13 @@ from ninja.errors import HttpError
 from datetime import datetime
 from . import models
 from django.shortcuts import get_object_or_404
-import json
 from django.core.mail import send_mail
-from django.db.models import Q
-
+from django.db.models import Q, F
+from .models import EventTags
+from datetime import datetime
+from django.utils import timezone
+from geopy.distance import geodesic
+import pytz
 
 router = Router()
 UserModel = auth.get_user_model()
@@ -51,10 +54,15 @@ class EventSchema(Schema):
     unique_aspect: str
     occurence_date: str
     location: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     price: float
     photos: List[str] = []
     number_of_guests: int
     number_of_bookings: int
+    tags: List[str] = []
+    external_booking_url: Optional[str] = None
+    
 
 
 class BookingSchema(Schema):
@@ -68,12 +76,16 @@ class EventCreateSchema(Schema):
     title: str
     description: str
     unique_aspect: str
-    occurence_date: str  # Expecting ISO string
+    occurence_date: str  # ISO string
     location: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     price: float
     number_of_guests: int
     number_of_bookings: int
     photos: List[str] = []
+    tags: List[int] = []
+    external_booking_url: Optional[str] = None
 
 class EventCreateResponse(Schema):
     message: str
@@ -287,27 +299,87 @@ def update_user_profile(request):
 
 
 @router.get("/event/get_all", response=List[EventSchema])
-def list_all_events(request):
-    """Returns a list of all events."""
-    events = Event.objects.all()
+def list_filtered_events(request, 
+                         date: Optional[str] = None,
+                         date_after: Optional[str] = None,
+                         date_before: Optional[str] = None,
+                         location: Optional[str] = None,
+                         radius: Optional[int] = None,
+                         tags_include: Optional[str] = None,
+                         tags_exclude: Optional[str] = None,
+                         available_only: Optional[bool] = False,
+                         sort_by_date: Optional[bool] = True,
+                         user_lat: Optional[float] = None,
+                         user_lon: Optional[float] = None,
+                         show_old: Optional[bool] = True):
 
-    if not events.exists():
-        return json_response([])  # Return empty list if no events
+    # Start with only approved events in the future
+    qs = Event.objects.filter(approved=True)  # ✅ NEW: only include approved events
+    now = timezone.now()
+    if not show_old:
+        qs = qs.filter(occurence_date__gte=now)
+
+    if date:
+        from datetime import timedelta
+        from django.utils.timezone import make_aware
+
+        try:
+            parsed = datetime.strptime(date, "%Y-%m-%d")
+            mst = pytz.timezone("America/Denver")
+            start = mst.localize(parsed)
+            end = start + timedelta(days=1)
+            qs = qs.filter(occurence_date__gte=start, occurence_date__lt=end)
+        except ValueError:
+            pass
+
+    if date_after:
+        qs = qs.filter(occurence_date__gte=date_after)
+
+    if date_before:
+        qs = qs.filter(occurence_date__lte=date_before)
+
+    if available_only:
+        qs = qs.filter(number_of_bookings__lt=F("number_of_guests"))
+
+    if tags_include:
+        include_tags = tags_include.split(",")
+        qs = qs.filter(tags__tag_name__in=include_tags).distinct()
+
+    if tags_exclude:
+        exclude_tags = tags_exclude.split(",")
+        qs = qs.exclude(tags__tag_name__in=exclude_tags)
+
+    if user_lat is not None and user_lon is not None and radius is not None:
+        from geopy.distance import geodesic
+        user_coords = (user_lat, user_lon)
+        filtered_ids = []
+        for event in qs:
+            if event.latitude is not None and event.longitude is not None:
+                dist = geodesic(user_coords, (event.latitude, event.longitude)).miles
+                if dist <= radius:
+                    filtered_ids.append(event.id)
+        qs = qs.filter(id__in=filtered_ids)
+
+    if sort_by_date:
+        qs = qs.order_by("occurence_date")
 
     return [
-    EventSchema(
-        id=event.id,
-        title=event.title,
-        description=event.description,
-        unique_aspect=event.unique_aspect,
-        occurence_date=str(event.occurence_date),
-        location=event.location or "",
-        price=float(event.price),
-        photos=event.photos or [],
-        number_of_guests=event.number_of_guests,
-        number_of_bookings=event.number_of_bookings
-    ) for event in events
-]
+        EventSchema(
+            id=event.id,
+            title=event.title,
+            description=event.description,
+            unique_aspect=event.unique_aspect,
+            occurence_date=str(event.occurence_date),
+            location=event.location or "",
+            price=float(event.price),
+            photos=event.photos or [],
+            number_of_guests=event.number_of_guests,
+            number_of_bookings=event.number_of_bookings,
+            tags=[tag.tag_name for tag in event.tags.all()]
+        )
+        for event in qs
+    ]
+
 
 
 @router.post("/event/create", response=EventCreateResponse)
@@ -315,6 +387,9 @@ def create_event(request, payload: EventCreateSchema):
     if not request.user.is_authenticated:
         raise HttpError(401, "Authentication required")
 
+    if not request.user.is_host:
+        raise HttpError(403, "Only creators can post events")
+    
     try:
         event = Event.objects.create(
             title=payload.title,
@@ -322,12 +397,17 @@ def create_event(request, payload: EventCreateSchema):
             unique_aspect=payload.unique_aspect,
             occurence_date=datetime.fromisoformat(payload.occurence_date),
             location=payload.location,
+            latitude=payload.latitude,
+            longitude=payload.longitude,
             price=payload.price,
             number_of_guests=payload.number_of_guests,
             number_of_bookings=payload.number_of_bookings,
             photos=payload.photos,
+            external_booking_url=payload.external_booking_url,
             host=request.user
         )
+        if payload.tags:
+                event.tags.set(EventTags.objects.filter(id__in=payload.tags))
     except Exception as e:
         raise HttpError(400, f"Failed to create event: {str(e)}")
 
@@ -349,7 +429,9 @@ def get_event_by_id(request, event_id: int):
             "host_first_name": event.host.first_name if event.host else "Unknown",
             "host_last_name": event.host.last_name if event.host else "",
             "host_profile_pic": event.host.profile_pic.url if event.host and event.host.profile_pic else "",
-            "host_id": event.host.id if event.host else None
+            "host_id": event.host.id if event.host else None,
+            "external_booking_url": event.external_booking_url,
+            "tags": [tag.tag_name for tag in event.tags.all()]
         })
     except Event.DoesNotExist:
         raise HttpError(404, "Event not found")
@@ -523,3 +605,8 @@ def get_allowed_dms(request):
         print("🔥 Critical error in get_allowed_dms API:")
         print(traceback.format_exc())
         raise HttpError(500, "Server failed to retrieve allowed users")
+
+@router.get("/tags")
+def get_all_tags(request):
+    tags = EventTags.objects.all()
+    return json_response({"tags": [{"id": t.id, "tag_name": t.tag_name} for t in tags]})
