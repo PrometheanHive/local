@@ -138,6 +138,20 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
                   >
                     RSVP for {formattedDate} at {formattedTime}
                   </Button>
+                  <Divider>
+                    {experienceData.external_booking_url && (
+                      <Button
+                        component="a"
+                        href={experienceData.external_booking_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color="teal"
+                        fullWidth
+                      >
+                        Book on External Site
+                      </Button>
+                    )}
+                  </Divider>
                 </Stack>
               </Card>
             </Grid.Col>

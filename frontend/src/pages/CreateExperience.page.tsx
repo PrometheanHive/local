@@ -29,6 +29,7 @@ interface FormValues {
   longitude?: number;
   photos: File[];
   passphrase: string;
+  external_booking_url?: string;
 }
 
 export function CreateExperience() {
@@ -51,6 +52,7 @@ export function CreateExperience() {
       longitude: undefined,
       photos: [],
       passphrase: '',
+      external_booking_url: '',
     },
   });
 
@@ -235,6 +237,12 @@ export function CreateExperience() {
                 clearable
               />
 
+              <TextInput
+                label="External Booking Link (Optional)"
+                placeholder="https://othersite.com/ticket/123"
+                {...form.getInputProps('external_booking_url')}
+              />
+              
               <TextInput
                 required
                 label="Enter Host Code Phrase"

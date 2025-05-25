@@ -26,7 +26,8 @@ class Event(models.Model):
     occurence_date = models.DateTimeField(blank=True, null=True)
     duration = models.DurationField(blank=True, null=True)
     tags = models.ManyToManyField(EventTags, blank=True, related_name='events')
-
+    external_booking_url = models.URLField(blank=True, null=True)
+    
     # NEW GEO INFO
     location = models.CharField(max_length=255)
     latitude = models.FloatField(blank=True, null=True)
