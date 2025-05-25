@@ -28,7 +28,6 @@ interface FormValues {
   latitude?: number;
   longitude?: number;
   photos: File[];
-  passphrase: string;
   external_booking_url?: string;
 }
 
@@ -51,7 +50,6 @@ export function CreateExperience() {
       latitude: undefined,
       longitude: undefined,
       photos: [],
-      passphrase: '',
       external_booking_url: '',
     },
   });
@@ -95,53 +93,75 @@ export function CreateExperience() {
   }, []);
 
   const handleSubmit = async (values: typeof form.values) => {
-    if (values.passphrase !== "iamahost") {
-      alert("Incorrect host code phrase. Please contact support.");
-      return;
-    }
-
     try {
+      // Step 1: Create the event
       const eventResponse = await Api.instance.post(`${API_BASE}/general/event/create`, {
         ...values,
         tags: selectedTagIds.map((name) => tagIdMap.current[name]),
-        photos: []
+        photos: [] // Defer photos
       }, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
-
+  
       const eventId = eventResponse.data.event_id;
       const uploadedUrls: string[] = [];
-
+      const failedUploads: string[] = []; // ✅ Track failed uploads
+  
+      // Step 2: Try to upload photos
       for (const file of values.photos) {
         const formData = new FormData();
         formData.append("file", file);
-
-        const uploadResponse = await Api.instance.post<{ fileUrl: string }>(
-          `${API_BASE}/general/upload?event_id=${eventId}`,
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-            withCredentials: true,
-          }
-        );
-
-        uploadedUrls.push(uploadResponse.data.fileUrl);
+  
+        try {
+          const uploadResponse = await Api.instance.post<{ fileUrl: string }>(
+            `${API_BASE}/general/upload?event_id=${eventId}`,
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+              withCredentials: true,
+            }
+          );
+          uploadedUrls.push(uploadResponse.data.fileUrl);
+        } catch (uploadErr) {
+          console.error("Photo upload failed for file:", file.name, uploadErr);
+          failedUploads.push(file.name); // ✅ Add filename to failed list
+        }
       }
-
-      await Api.instance.patch(`${API_BASE}/general/event/id/${eventId}/update_photos`, {
-        photos: uploadedUrls
-      }, {
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true,
-      });
-
+  
+      // Step 3: Patch uploaded URLs
+      if (uploadedUrls.length > 0) {
+        await Api.instance.patch(`${API_BASE}/general/event/id/${eventId}/update_photos`, {
+          photos: uploadedUrls
+        }, {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        });
+      }
+  
+      // ✅ Step 4: Show alert if any failed
+      if (failedUploads.length > 0) {
+        alert(`Your experience was created successfully, but ${failedUploads.length} image(s) failed to upload:\n\n${failedUploads.join('\n')}\n\nYou can edit the event later to retry.`);
+      }
+  
+      // Step 5: Navigate away
       navigate("/");
-    } catch (error) {
-      console.error("Error creating experience or uploading photos:", error);
-      alert("There was a problem creating the experience. Please try again.");
+  
+    } catch (error: any) {
+      console.error("Error creating experience:", error);
+  
+      const status = error?.response?.status;
+      if (status === 403) {
+        alert("You are not authorized to create experiences. Please request to become a Creator if you're interested.");
+      } else if (status === 401) {
+        alert("You must be signed in to create an experience.");
+      } else {
+        alert("There was a problem creating the experience. Please try again later.");
+      }
     }
   };
+  
+  
 
   const selectedFiles = form.values.photos.map((file: File, index: number) => (
     <Group key={file.name} gap={4} align="center">
@@ -241,14 +261,6 @@ export function CreateExperience() {
                 label="External Booking Link (Optional)"
                 placeholder="https://othersite.com/ticket/123"
                 {...form.getInputProps('external_booking_url')}
-              />
-              
-              <TextInput
-                required
-                label="Enter Host Code Phrase"
-                placeholder="Enter code to post"
-                {...form.getInputProps('passphrase')}
-                style={{ marginTop: 20, width: "100%" }}
               />
 
               <Group justify="space-between" mt="md">

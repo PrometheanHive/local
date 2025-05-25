@@ -385,6 +385,9 @@ def create_event(request, payload: EventCreateSchema):
     if not request.user.is_authenticated:
         raise HttpError(401, "Authentication required")
 
+    if not request.user.is_host:
+        raise HttpError(403, "Only creators can post events")
+    
     try:
         event = Event.objects.create(
             title=payload.title,
