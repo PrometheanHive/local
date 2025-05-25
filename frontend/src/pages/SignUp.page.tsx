@@ -95,10 +95,10 @@ export function SignUp() {
       }, {
         withCredentials: true
       });
-
+      console.log("Printing email, firstname:", email, firstName);
       await createUserFromEmail(email, firstName);
       await loginUserByEmail(email);
-
+      window.location.href = '/account-settings';
     } catch (error) {
       console.error("Signup or login failed:", error);
     }

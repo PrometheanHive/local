@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './auth/AuthProvider';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { initializeCometChatUIKit } from './services/cometchatService'; // ✅ Import this
 
 const mapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -19,9 +20,9 @@ const loadGoogleMaps = () => {
   });
 };
 
-loadGoogleMaps()
+Promise.all([loadGoogleMaps(), initializeCometChatUIKit()])
   .then(() => {
-    console.log('✅ Google Maps initialized');
+    console.log('✅ Google Maps and CometChat UIKit initialized');
     ReactDOM.createRoot(document.getElementById('root')!).render(
       <GoogleOAuthProvider clientId={clientId}>
         <AuthProvider>
