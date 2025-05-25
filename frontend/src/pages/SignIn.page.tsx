@@ -1,4 +1,3 @@
-// SignIn.page.tsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Paper, Title, Text, TextInput, PasswordInput, Button, Divider } from '@mantine/core';
@@ -10,111 +9,112 @@ import { AccountSettings } from './AccountSettings';
 import { loginUserByEmail } from '@/services/cometchatService';
 
 export function SignIn() {
-    const [email, setEmail] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const [isGoogleError, setIsGoogleError] = useState<boolean>(false);
 
-    const auth = useAuth();
-    const user = auth?.user || null;
-    const setUser = auth?.setUser || (() => {});
+  const auth = useAuth();
+  const user = auth?.user || null;
+  const setUser = auth?.setUser || (() => {});
 
-    const handleGoogleLogin = async (credentialResponse: any) => {
-        try {
-          const decoded: any = jwtDecode(credentialResponse.credential);
-          const email = decoded.email;
-      
-          // Step 1: Check if user exists in backend DB
-          const existsRes = await Api.instance.get(`${API_BASE}/general/user/exists-by-email`, {
-            params: { email },
-            withCredentials: true
-          });
-      
-          if (!existsRes.data?.exists) {
-            setError("Google account not registered. Please sign up first.");
-            return;
-          }
-      
-          // Step 2: OAuth login with backend
-          const response = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
-            provider: "google",
-            token: credentialResponse.credential
-          }, { withCredentials: true });
-      
-          if (response.data?.user) {
-            const user = response.data.user;
-            setUser(user);
-      
-            // Step 3: Login to CometChat using email
-            await loginUserByEmail(email);
-      
-            // Step 4: Navigate to account page
-            window.location.href = '/account-settings';
-          } else {
-            setError("Login failed. Please try again.");
-          }
-      
-        } catch (err) {
-          console.error("OAuth login failed:", err);
-          setError("Google sign-in failed");
-        }
-      };
-      
+  const handleGoogleLogin = async (credentialResponse: any) => {
+    setIsGoogleError(true); // flag this is a Google login attempt
+    try {
+      const decoded: any = jwtDecode(credentialResponse.credential);
+      const email = decoded.email;
 
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault();
-        const values = { username: email, password: password };
-        console.log("Attempting login...");
-    
-        try {
-            const response = await Api.instance.post(`${API_BASE}/general/user/authenticate`, values, { withCredentials: true });
+      const existsRes = await Api.instance.get(`${API_BASE}/general/user/exists-by-email`, {
+        params: { email },
+        withCredentials: true
+      });
 
-            if (response.data && response.data.user_id) {
-                try {
-                    const userRes = await Api.instance.get(`${API_BASE}/general/user/${response.data.user_id}`, {
-                      withCredentials: true,
-                    });
-                
-                    const fullUser = userRes.data;
-                    console.log("✅ Full user fetched after login:", fullUser);
-                    setUser(fullUser); // now you’re setting the correct full object
-                
-                    // Optional: show a message or redirect later
-                } catch (err) {
-                    console.error("❌ Failed to fetch full user data after login:", err);
-                    setError("Failed to complete login.");
-                }
-                await loginUserByEmail(email);
+      if (!existsRes.data?.exists) {
+        setError("Google account not registered. Please sign up first.");
+        return;
+      }
 
-                // Redirect to homepage and refresh to reflect login state
-                window.location.href = '/';
-            } else {
-                setError("Incorrect username/password");
-            }
+      const response = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
+        provider: "google",
+        token: credentialResponse.credential
+      }, { withCredentials: true });
 
-        } catch (error) {
-            console.error('Login request failed:', error);
-            setError("Incorrect username/password");
-        }
-    };
+      if (response.data?.user) {
+        const user = response.data.user;
+        setUser(user);
+        await loginUserByEmail(email);
+        window.location.href = '/account-settings';
+      } else {
+        setError("Login failed. Please try again.");
+      }
 
-    if (user) return <AccountSettings user={user} />;
+    } catch (err) {
+      console.error("OAuth login failed:", err);
+      setError("Google sign-in failed");
+    }
+  };
 
-    return (
-        <Container my={40}>
-            <Paper p="md">
-                <Title order={2}>Sign In</Title>
-                <form onSubmit={handleSubmit}>
-                    <TextInput label="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-                    <PasswordInput label="Password" value={password} onChange={e => setPassword(e.target.value)} required mt="md" />
-                    {error && <Text c="red" size="sm">{error}</Text>}
-                    <Button type="submit" fullWidth mt="lg">Login</Button>
-                </form>
-                <Divider my="lg" label="or" labelPosition="center" />
-                <GoogleLogin onSuccess={handleGoogleLogin} onError={() => setError("Google Sign-In failed")} />
-                <Text size="sm" mt="md">
-                    Don't have an account? <Link to="/sign-up">Sign Up</Link>
-                </Text>
-            </Paper>
-        </Container>
-    );
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsGoogleError(false); // flag this as a password login
+
+    try {
+      const response = await Api.instance.post(`${API_BASE}/general/user/authenticate`, {
+        username: email,
+        password
+      }, { withCredentials: true });
+
+      if (response.data && response.data.user_id) {
+        const userRes = await Api.instance.get(`${API_BASE}/general/user/${response.data.user_id}`, {
+          withCredentials: true,
+        });
+
+        const fullUser = userRes.data;
+        setUser(fullUser);
+        await loginUserByEmail(email);
+        window.location.href = '/';
+      } else {
+        setError("Incorrect username/password");
+      }
+    } catch (error) {
+      console.error('Login request failed:', error);
+      setError("Incorrect username/password");
+    }
+  };
+
+  if (user) return <AccountSettings user={user} />;
+
+  return (
+    <Container my={40}>
+      <Paper p="md">
+        <Title order={2}>Sign In</Title>
+        <form onSubmit={handleSubmit}>
+          <TextInput label="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+          <PasswordInput label="Password" value={password} onChange={e => setPassword(e.target.value)} required mt="md" />
+          {!isGoogleError && error && (
+            <Text c="red" size="sm" mt="xs">{error}</Text>
+          )}
+          <Button type="submit" fullWidth mt="lg">Login</Button>
+        </form>
+
+        <Divider my="lg" label="or" labelPosition="center" />
+
+        <GoogleLogin
+          onSuccess={handleGoogleLogin}
+          onError={() => {
+            setIsGoogleError(true);
+            setError("Google Sign-In failed");
+          }}
+        />
+
+        {isGoogleError && error && (
+          <Text c="red" size="sm" mt="xs">{error}</Text>
+        )}
+
+        <Text size="sm" mt="md">
+          Don't have an account? <Link to="/sign-up">Sign Up</Link>
+        </Text>
+      </Paper>
+    </Container>
+  );
 }
