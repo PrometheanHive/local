@@ -129,6 +129,7 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
               <Card shadow="sm" p="lg">
                 <Stack gap="sm">
                   <Title order={3}>Available Dates</Title>
+
                   <Button
                     onClick={handleBookingRegister}
                     variant="filled"
@@ -138,9 +139,26 @@ export function SingleExperienceView({ experienceData }: SingleExperienceViewPro
                   >
                     RSVP for {formattedDate} at {formattedTime}
                   </Button>
+
+                  {experienceData.external_booking_url && (
+                    <>
+                      <Divider my="sm" label="Or book elsewhere" labelPosition="center" />
+                      <Button
+                        component="a"
+                        href={experienceData.external_booking_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color="teal"
+                        fullWidth
+                      >
+                        Book on External Site
+                      </Button>
+                    </>
+                  )}
                 </Stack>
               </Card>
             </Grid.Col>
+
           </Grid>
         </Stack>
 

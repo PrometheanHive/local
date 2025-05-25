@@ -61,6 +61,8 @@ class EventSchema(Schema):
     number_of_guests: int
     number_of_bookings: int
     tags: List[str] = []
+    external_booking_url: Optional[str] = None
+    
 
 
 class BookingSchema(Schema):
@@ -83,6 +85,7 @@ class EventCreateSchema(Schema):
     number_of_bookings: int
     photos: List[str] = []
     tags: List[int] = []
+    external_booking_url: Optional[str] = None
 
 class EventCreateResponse(Schema):
     message: str
@@ -310,8 +313,8 @@ def list_filtered_events(request,
                          user_lon: Optional[float] = None,
                          show_old: Optional[bool] = True):
 
-    qs = Event.objects.all()
-
+    # Start with only approved events in the future
+    qs = Event.objects.filter(approved=True)  # ✅ NEW: only include approved events
     now = timezone.now()
     if not show_old:
         qs = qs.filter(occurence_date__gte=now)
@@ -347,6 +350,7 @@ def list_filtered_events(request,
         qs = qs.exclude(tags__tag_name__in=exclude_tags)
 
     if user_lat is not None and user_lon is not None and radius is not None:
+        from geopy.distance import geodesic
         user_coords = (user_lat, user_lon)
         filtered_ids = []
         for event in qs:
@@ -372,7 +376,8 @@ def list_filtered_events(request,
             number_of_guests=event.number_of_guests,
             number_of_bookings=event.number_of_bookings,
             tags=[tag.tag_name for tag in event.tags.all()]
-        ) for event in qs
+        )
+        for event in qs
     ]
 
 
@@ -382,6 +387,9 @@ def create_event(request, payload: EventCreateSchema):
     if not request.user.is_authenticated:
         raise HttpError(401, "Authentication required")
 
+    if not request.user.is_host:
+        raise HttpError(403, "Only creators can post events")
+    
     try:
         event = Event.objects.create(
             title=payload.title,
@@ -395,6 +403,7 @@ def create_event(request, payload: EventCreateSchema):
             number_of_guests=payload.number_of_guests,
             number_of_bookings=payload.number_of_bookings,
             photos=payload.photos,
+            external_booking_url=payload.external_booking_url,
             host=request.user
         )
         if payload.tags:
@@ -421,6 +430,7 @@ def get_event_by_id(request, event_id: int):
             "host_last_name": event.host.last_name if event.host else "",
             "host_profile_pic": event.host.profile_pic.url if event.host and event.host.profile_pic else "",
             "host_id": event.host.id if event.host else None,
+            "external_booking_url": event.external_booking_url,
             "tags": [tag.tag_name for tag in event.tags.all()]
         })
     except Event.DoesNotExist:
