@@ -1,7 +1,5 @@
-// SignUp.page.tsx (Full Updated with Google OAuth and CometChat)
-
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Container, Paper, Title, Text, TextInput, PasswordInput,
   Button, RadioGroup, Radio, Divider
@@ -11,6 +9,7 @@ import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
 import { createUserFromEmail, loginUserByEmail } from '@/services/cometchatService';
 import { jwtDecode } from 'jwt-decode';
+import AppleSignin from 'react-apple-signin-auth';
 
 export function SignUp() {
   const [email, setEmail] = useState("");
@@ -19,7 +18,6 @@ export function SignUp() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [bio, setBio] = useState("");
-  //const navigate = useNavigate();
   const auth = useAuth();
   const setUser = auth?.setUser || (() => {});
 
@@ -29,26 +27,52 @@ export function SignUp() {
       const email = decoded.email;
       const firstName = decoded.given_name || "";
       const lastName = decoded.family_name || "";
-  
+
       const response = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
         provider: "google",
         token: credentialResponse.credential
       }, { withCredentials: true });
-  
+
       if (response.data?.user) {
         const user = response.data.user;
-        setUser(user); // update app context
-  
-        // 🧠 Combine full name for CometChat display
+        setUser(user);
+
         const fullName = `${firstName} ${lastName}`.trim();
-  
-        await createUserFromEmail(email, fullName); // creates CometChat user
-        await loginUserByEmail(email); // logs into CometChat
-  
+        await createUserFromEmail(email, fullName);
+        await loginUserByEmail(email);
+
         window.location.href = '/account-settings';
       }
     } catch (err) {
       console.error("Google sign-up failed:", err);
+    }
+  };
+
+  const handleAppleSignup = async (response: any) => {
+    try {
+      const id_token = response.authorization.id_token;
+      const decoded: any = jwtDecode(id_token);
+      const email = decoded.email;
+      const firstName = decoded.name?.firstName || "";
+      const lastName = decoded.name?.lastName || "";
+
+      const result = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
+        provider: "apple",
+        token: id_token
+      }, { withCredentials: true });
+
+      if (result.data?.user) {
+        const user = result.data.user;
+        setUser(user);
+
+        const fullName = `${firstName} ${lastName}`.trim();
+        await createUserFromEmail(email, fullName);
+        await loginUserByEmail(email);
+
+        window.location.href = '/account-settings';
+      }
+    } catch (err) {
+      console.error("Apple sign-up failed:", err);
     }
   };
 
@@ -72,9 +96,8 @@ export function SignUp() {
       const loginResponse = await Api.instance.post(`${API_BASE}/general/user/authenticate`, {
         username: email,
         password: password
-      }, {
-        withCredentials: true
-      });
+      }, { withCredentials: true });
+
       const fullName = `${firstName} ${lastName}`.trim();
       await createUserFromEmail(email, fullName);
       await loginUserByEmail(email);
@@ -103,6 +126,25 @@ export function SignUp() {
         </form>
         <Divider my="lg" label="or" labelPosition="center" />
         <GoogleLogin onSuccess={handleGoogleSignup} onError={() => console.error("Google Sign-Up failed")} />
+        <AppleSignin
+          authOptions={{
+            clientId: import.meta.env.VITE_APPLE_CLIENT_ID,
+            scope: 'name email',
+            redirectURI: import.meta.env.VITE_APPLE_REDIRECT_URI,
+            state: 'state',
+            usePopup: true,
+          }}
+          uiType="dark"
+          onSuccess={handleAppleSignup}
+          onError={(error: any) => {
+            console.error("Apple Sign-Up failed:", error);
+          }}
+          render={(props: any) => (
+            <Button onClick={props.onClick} fullWidth mt="sm">
+              Sign up with Apple
+            </Button>
+          )}
+        />
         <Text size="sm" mt="sm">
           Already have an account? <Link to="/sign-in">Log In</Link>
         </Text>

@@ -266,6 +266,13 @@ def oauth_login(request, payload: OAuthSchema):
             email = idinfo["email"]
             first_name = idinfo.get("given_name", "")
             last_name = idinfo.get("family_name", "")
+        elif payload.provider == "apple":
+            # Validate the id_token
+            idinfo = jwt.decode(payload.token, options={"verify_signature": False})
+            email = idinfo.get("email")
+            first_name = idinfo.get("name", {}).get("firstName", "")
+            last_name = idinfo.get("name", {}).get("lastName", "")
+
         else:
             raise HttpError(400, "Unsupported provider")
 

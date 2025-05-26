@@ -7,6 +7,7 @@ import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
 import { AccountSettings } from './AccountSettings';
 import { loginUserByEmail } from '@/services/cometchatService';
+import AppleSignin from 'react-apple-signin-auth';
 
 export function SignIn() {
   const [email, setEmail] = useState<string>("");
@@ -19,7 +20,7 @@ export function SignIn() {
   const setUser = auth?.setUser || (() => {});
 
   const handleGoogleLogin = async (credentialResponse: any) => {
-    setIsGoogleError(true); // flag this is a Google login attempt
+    setIsGoogleError(true);
     try {
       const decoded: any = jwtDecode(credentialResponse.credential);
       const email = decoded.email;
@@ -54,9 +55,46 @@ export function SignIn() {
     }
   };
 
+  const handleAppleLogin = async (response: any) => {
+    setIsGoogleError(true);
+    try {
+      const id_token = response.authorization.id_token;
+      const decoded: any = jwtDecode(id_token);
+      const email = decoded.email;
+
+      const existsRes = await Api.instance.get(`${API_BASE}/general/user/exists-by-email`, {
+        params: { email },
+        withCredentials: true
+      });
+
+      if (!existsRes.data?.exists) {
+        setError("Apple account not registered. Please sign up first.");
+        return;
+      }
+
+      const result = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
+        provider: "apple",
+        token: id_token
+      }, { withCredentials: true });
+
+      if (result.data?.user) {
+        const user = result.data.user;
+        setUser(user);
+        await loginUserByEmail(email);
+        window.location.href = '/account-settings';
+      } else {
+        setError("Login failed. Please try again.");
+      }
+
+    } catch (err) {
+      console.error("Apple OAuth login failed:", err);
+      setError("Apple sign-in failed");
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsGoogleError(false); // flag this as a password login
+    setIsGoogleError(false);
 
     try {
       const response = await Api.instance.post(`${API_BASE}/general/user/authenticate`, {
@@ -107,6 +145,28 @@ export function SignIn() {
           }}
         />
 
+        <AppleSignin
+          authOptions={{
+            clientId: import.meta.env.VITE_APPLE_CLIENT_ID,
+            scope: 'name email',
+            redirectURI: import.meta.env.VITE_APPLE_REDIRECT_URI,
+            state: 'state',
+            usePopup: true,
+          }}
+          uiType="dark"
+          onSuccess={handleAppleLogin}
+          onError={(error: any) => {
+            console.error("Apple Sign-In failed:", error);
+            setError("Apple Sign-In failed");
+            setIsGoogleError(true);
+          }}
+          render={(props: any) => (
+            <Button onClick={props.onClick} fullWidth mt="sm">
+              Sign in with Apple
+            </Button>
+          )}
+        />
+
         {isGoogleError && error && (
           <Text c="red" size="sm" mt="xs">{error}</Text>
         )}
@@ -117,4 +177,4 @@ export function SignIn() {
       </Paper>
     </Container>
   );
-}
+} 
