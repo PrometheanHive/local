@@ -171,7 +171,7 @@ def get_current_user(request):
 @router.post("/user/create")
 def create_user(request):
     data = request.POST
-    email = data.get("email")
+    email = data.get("email", "").strip().lower()
     username = email  # Enforce email=username
 
     # Check for email collision
@@ -230,7 +230,9 @@ def create_user(request):
 @router.post("/user/authenticate")
 def authenticate_user(request, payload: UserAuthSchema):
     """User authentication and session management."""
-    user = authenticate(username=payload.username, password=payload.password)
+    username = payload.username.strip().lower()
+    user = authenticate(username=username, password=payload.password)
+
 
     if user is not None:
         login(request, user)
@@ -252,8 +254,10 @@ def authenticate_user(request, payload: UserAuthSchema):
 
 @router.get("/user/exists-by-email")
 def check_user_exists_by_email(request, email: str):
+    email = email.strip().lower()
     exists = get_user_model().objects.filter(email=email).exists()
     return {"exists": exists}
+
 
 @router.post("/user/oauth-login")
 def oauth_login(request, payload: OAuthSchema):
@@ -264,13 +268,13 @@ def oauth_login(request, payload: OAuthSchema):
                 google_requests.Request(),
                 audience=None
             )
-            email = idinfo["email"]
+            email = idinfo["email"].strip().lower()
             first_name = idinfo.get("given_name", "")
             last_name = idinfo.get("family_name", "")
         elif payload.provider == "apple":
             # Validate the id_token
             idinfo = jwt.decode(payload.token, options={"verify_signature": False})
-            email = idinfo.get("email")
+            email = idinfo.get("email", "").strip().lower()
             first_name = idinfo.get("name", {}).get("firstName", "")
             last_name = idinfo.get("name", {}).get("lastName", "")
 
@@ -323,7 +327,6 @@ def oauth_login(request, payload: OAuthSchema):
                 fail_silently=False
             )
 
-
         login(request, user)
         request.session.create()
 
@@ -354,6 +357,7 @@ def oauth_login(request, payload: OAuthSchema):
         import traceback
         print("🔥 OAuth login error:", traceback.format_exc())
         raise HttpError(500, "OAuth login failed")
+
 
 
 @router.post("/user/logout")

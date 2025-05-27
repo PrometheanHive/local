@@ -23,10 +23,10 @@ export function SignIn() {
     setIsGoogleError(true);
     try {
       const decoded: any = jwtDecode(credentialResponse.credential);
-      const email = decoded.email;
+      const normalizedEmail = decoded.email.trim().toLowerCase();
 
       const existsRes = await Api.instance.get(`${API_BASE}/general/user/exists-by-email`, {
-        params: { email },
+        params: { email: normalizedEmail },
         withCredentials: true
       });
 
@@ -43,7 +43,7 @@ export function SignIn() {
       if (response.data?.user) {
         const user = response.data.user;
         setUser(user);
-        await loginUserByEmail(email);
+        await loginUserByEmail(normalizedEmail);
         window.location.href = '/account-settings';
       } else {
         setError("Login failed. Please try again.");
@@ -60,10 +60,10 @@ export function SignIn() {
     try {
       const id_token = response.authorization.id_token;
       const decoded: any = jwtDecode(id_token);
-      const email = decoded.email;
+      const normalizedEmail = decoded.email.trim().toLowerCase();
 
       const existsRes = await Api.instance.get(`${API_BASE}/general/user/exists-by-email`, {
-        params: { email },
+        params: { email: normalizedEmail },
         withCredentials: true
       });
 
@@ -80,7 +80,7 @@ export function SignIn() {
       if (result.data?.user) {
         const user = result.data.user;
         setUser(user);
-        await loginUserByEmail(email);
+        await loginUserByEmail(normalizedEmail);
         window.location.href = '/account-settings';
       } else {
         setError("Login failed. Please try again.");
@@ -96,9 +96,11 @@ export function SignIn() {
     event.preventDefault();
     setIsGoogleError(false);
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     try {
       const response = await Api.instance.post(`${API_BASE}/general/user/authenticate`, {
-        username: email,
+        username: normalizedEmail,
         password
       }, { withCredentials: true });
 
@@ -109,7 +111,7 @@ export function SignIn() {
 
         const fullUser = userRes.data;
         setUser(fullUser);
-        await loginUserByEmail(email);
+        await loginUserByEmail(normalizedEmail);
         window.location.href = '/';
       } else {
         setError("Incorrect username/password");

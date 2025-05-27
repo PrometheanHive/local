@@ -27,6 +27,7 @@ export function SignUp() {
       const email = decoded.email;
       const firstName = decoded.given_name || "";
       const lastName = decoded.family_name || "";
+      const normalizedEmail = email.trim().toLowerCase();
 
       const response = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
         provider: "google",
@@ -53,7 +54,8 @@ export function SignUp() {
       const id_token = response.authorization.id_token;
       const decoded: any = jwtDecode(id_token);
       const email = decoded.email;
-  
+      const normalizedEmail = email.trim().toLowerCase();
+
       const result = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
         provider: "apple",
         token: id_token
@@ -66,8 +68,8 @@ export function SignUp() {
         // ✅ Use name from backend response (not decoded token)
         const fullName = `${user.first_name || 'unknown'} ${user.last_name || 'unknown'}`.trim();
         console.log('fullname: ', fullName);
-        await createUserFromEmail(email, fullName);
-        await loginUserByEmail(email);
+        await createUserFromEmail(normalizedEmail, fullName);
+        await loginUserByEmail(normalizedEmail);
   
         window.location.href = '/account-settings';
       }
@@ -80,34 +82,36 @@ export function SignUp() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
+      const normalizedEmail = email.trim().toLowerCase();
+  
       const formData = new FormData();
-      formData.append("email", email);
-      formData.append("username", email);
+      formData.append("email", normalizedEmail);
+      formData.append("username", normalizedEmail);
       formData.append("first_name", firstName);
       formData.append("last_name", lastName);
       formData.append("password", password);
       formData.append("bio", bio);
       formData.append("role", role);
-
+  
       await Api.instance.post(`${API_BASE}/general/user/create`, formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
-
+  
       const loginResponse = await Api.instance.post(`${API_BASE}/general/user/authenticate`, {
-        username: email,
-        password: password
+        username: normalizedEmail,
+        password
       }, { withCredentials: true });
-
+  
       const fullName = `${firstName} ${lastName}`.trim();
-      await createUserFromEmail(email, fullName);
-      await loginUserByEmail(email);
+      await createUserFromEmail(normalizedEmail, fullName);
+      await loginUserByEmail(normalizedEmail);
       window.location.href = '/account-settings';
     } catch (error) {
       console.error("Signup or login failed:", error);
     }
   };
-
+  
   return (
     <Container my={40}>
       <Paper p="md">
