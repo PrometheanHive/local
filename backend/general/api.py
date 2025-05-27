@@ -23,6 +23,7 @@ from typing import Literal
 import requests
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
+import jwt
 
 class OAuthSchema(Schema):
     provider: Literal["google", "apple", "meta"]

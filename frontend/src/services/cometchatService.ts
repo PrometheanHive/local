@@ -23,6 +23,7 @@ export async function createUserFromEmail(email: string, firstName: string) {
     const uid = sanitizeEmailToUID(email);
     const user = new CometChat.User(uid);
     user.setName(firstName);
+    console.log('user:', user);
     console.log('Attempting CometChat user creation');
     await CometChat.createUser(user, COMETCHAT_CONSTANTS.AUTH_KEY);
     console.log('✅ CometChat user created');

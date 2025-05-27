@@ -53,28 +53,29 @@ export function SignUp() {
       const id_token = response.authorization.id_token;
       const decoded: any = jwtDecode(id_token);
       const email = decoded.email;
-      const firstName = decoded.name?.firstName || "";
-      const lastName = decoded.name?.lastName || "";
-
+  
       const result = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
         provider: "apple",
         token: id_token
       }, { withCredentials: true });
-
+  
       if (result.data?.user) {
         const user = result.data.user;
         setUser(user);
-
-        const fullName = `${firstName} ${lastName}`.trim();
+  
+        // ✅ Use name from backend response (not decoded token)
+        const fullName = `${user.first_name || 'unknown'} ${user.last_name || 'unknown'}`.trim();
+        console.log('fullname: ', fullName);
         await createUserFromEmail(email, fullName);
         await loginUserByEmail(email);
-
+  
         window.location.href = '/account-settings';
       }
     } catch (err) {
       console.error("Apple sign-up failed:", err);
     }
   };
+  
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
