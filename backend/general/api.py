@@ -286,7 +286,9 @@ def oauth_login(request, payload: OAuthSchema):
         if user:
             # Conflict with another provider
             if user.auth_provider and user.auth_provider != payload.provider:
-                raise HttpError(409, f"This email is already used for {user.auth_provider.capitalize()} login. Please log in using that method.")
+                return json_response({
+                "error": f"This email is already used for {user.auth_provider.capitalize()} login. Please log in using that method."
+                }, status=409)
             # Allow login for matching provider
             print(f"✅ Logging in existing user {email}")
         else:
