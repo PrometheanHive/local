@@ -4,5 +4,6 @@ __pycache__/
 node_modules
 node_modules
 backend/static
-error.log
+backend/error.log
 .env
+*/local/.env
