@@ -139,17 +139,13 @@ export function SignUp() {
             state: 'state',
             usePopup: true,
           }}
-          uiType="dark"
+          uiType="dark" // or "light" or "auto"
           onSuccess={handleAppleSignup}
           onError={(error: any) => {
             console.error("Apple Sign-Up failed:", error);
           }}
-          render={(props: any) => (
-            <Button onClick={props.onClick} fullWidth mt="sm">
-              Sign up with Apple
-            </Button>
-          )}
         />
+
         <Text size="sm" mt="sm">
           Already have an account? <Link to="/sign-in">Log In</Link>
         </Text>

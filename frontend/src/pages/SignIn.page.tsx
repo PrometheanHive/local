@@ -162,11 +162,6 @@ export function SignIn() {
             setError("Apple Sign-In failed");
             setIsGoogleError(true);
           }}
-          render={(props: any) => (
-            <Button onClick={props.onClick} fullWidth mt="sm">
-              Sign in with Apple
-            </Button>
-          )}
         />
 
         {isGoogleError && error && (
