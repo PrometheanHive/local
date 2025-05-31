@@ -28,6 +28,10 @@ MEDIA_ROOT = "/mnt/volume/uploads/"  # Local storage path
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-ys2%4h5a2p-d6+d_t+02k(kah1i+u_@x%u2dzz!@#v*+9a8&p)'
+FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID")
+FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET")
+
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"  # Use environment variable

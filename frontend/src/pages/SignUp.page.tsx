@@ -8,9 +8,15 @@ import { GoogleLogin } from '@react-oauth/google';
 import Api, { API_BASE } from '@/api/API';
 import { useAuth } from '../auth/AuthProvider';
 import { createUserFromEmail, loginUserByEmail } from '@/services/cometchatService';
+import { loadFacebookSDK } from '@/services/loadFacebookSDK';
+
 import { jwtDecode } from 'jwt-decode';
 import AppleSignin from 'react-apple-signin-auth';
-
+declare global {
+  interface Window {
+    FB: any;
+  }
+}
 export function SignUp() {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -20,6 +26,31 @@ export function SignUp() {
   const [bio, setBio] = useState("");
   const auth = useAuth();
   const setUser = auth?.setUser || (() => {});
+
+  const handleFacebookLogin = async () => {
+    await loadFacebookSDK();
+  
+    window.FB.login(async (response: any) => {
+      if (response.authResponse) {
+        const accessToken = response.authResponse.accessToken;
+  
+        const res = await Api.instance.post(`${API_BASE}/general/user/oauth-login`, {
+          provider: "meta",
+          token: accessToken
+        }, { withCredentials: true });
+  
+        const user = res.data?.user;
+        if (user) {
+          setUser(user);
+          await loginUserByEmail(user.email);
+          window.location.href = '/account-settings';
+        }
+      } else {
+        console.error("User cancelled login or did not fully authorize.");
+      }
+    }, { scope: 'email,public_profile' });
+  };
+  
 
   const handleGoogleSignup = async (credentialResponse: any) => {
     try {
@@ -145,6 +176,10 @@ export function SignUp() {
             console.error("Apple Sign-Up failed:", error);
           }}
         />
+        <Button fullWidth mt="sm" onClick={handleFacebookLogin}>
+          Continue with Facebook
+        </Button>
+
 
         <Text size="sm" mt="sm">
           Already have an account? <Link to="/sign-in">Log In</Link>

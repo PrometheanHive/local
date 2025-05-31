@@ -277,6 +277,17 @@ def oauth_login(request, payload: OAuthSchema):
             email = idinfo.get("email", "").strip().lower()
             first_name = idinfo.get("name", {}).get("firstName", "")
             last_name = idinfo.get("name", {}).get("lastName", "")
+        elif payload.provider == "meta":
+            # Verify token with Facebook Graph API
+            fb_response = requests.get(
+                f"https://graph.facebook.com/me?fields=id,email,first_name,last_name&access_token={payload.token}"
+            )
+            if fb_response.status_code != 200:
+                raise HttpError(401, "Facebook token verification failed")
+            fb_data = fb_response.json()
+            email = fb_data.get("email", "").strip().lower()
+            first_name = fb_data.get("first_name", "")
+            last_name = fb_data.get("last_name", "")
 
         else:
             raise HttpError(400, "Unsupported provider")
